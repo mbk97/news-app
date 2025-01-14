@@ -12,3 +12,7 @@ export interface INews {
   newsImage: string;
   category: string;
 }
+
+export interface ICategory {
+  categoryName: string;
+}

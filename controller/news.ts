@@ -1,6 +1,7 @@
 import { Response, Request } from "express";
 import { createNewsSchema, validate } from "../utils/validation";
 import News from "../model/newsModel";
+import Category from "../model/categoryModel";
 
 const createNews = async (req: Request, res: Response) => {
   const { newsTitle, newsBody, createdBy, newsImage, category } = req.body;
@@ -9,12 +10,25 @@ const createNews = async (req: Request, res: Response) => {
 
   if (error) {
     res.status(400).json({
+      success: false,
       message: error,
     });
     return;
   }
 
   try {
+    const checkIfCategoryIsCorrect = await Category.findOne({
+      categoryName: { $regex: `^${category}$`, $options: "i" },
+    });
+
+    if (!checkIfCategoryIsCorrect) {
+      res.status(400).json({
+        success: false,
+        message: "Category does not exist",
+      });
+      return;
+    }
+
     const freshNews = await News.create({
       newsTitle,
       newsBody,
@@ -25,6 +39,7 @@ const createNews = async (req: Request, res: Response) => {
 
     if (freshNews) {
       res.status(201).json({
+        success: true,
         message: "News successfully created",
         data: {
           freshNews,
@@ -33,6 +48,7 @@ const createNews = async (req: Request, res: Response) => {
     }
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: "Server error",
     });
   }
@@ -41,8 +57,9 @@ const createNews = async (req: Request, res: Response) => {
 const getAllNews = async (req: Request, res: Response) => {
   const news = await News.find();
   res.status(200).json({
-    data: news,
+    success: true,
     message: "Successful",
+    data: news,
   });
 };
 
@@ -51,11 +68,13 @@ const getNewById = async (req: Request, res: Response) => {
   const news = await News.findById(id);
   if (news) {
     res.status(200).json({
+      success: true,
       data: news,
       message: "Successful",
     });
   } else {
     res.status(400).json({
+      success: false,
       message: "News not found",
     });
     return;
@@ -67,6 +86,7 @@ const updateNews = async (req: Request, res: Response) => {
   const error = validate(createNewsSchema, req.body);
   if (error) {
     res.status(400).json({
+      success: false,
       message: error,
     });
     return;
@@ -75,6 +95,7 @@ const updateNews = async (req: Request, res: Response) => {
     const newsToBeUpdated = await News.findById(id);
     if (!newsToBeUpdated) {
       res.status(400).json({
+        success: false,
         message: "News does not exist",
       });
       return;
@@ -86,12 +107,14 @@ const updateNews = async (req: Request, res: Response) => {
 
     if (data) {
       res.status(200).json({
+        success: true,
         message: "News updated",
         data,
       });
     }
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: "Server error",
     });
   }
@@ -103,15 +126,20 @@ const deleteNews = async (req: Request, res: Response) => {
     const news = await News.findById(id);
     if (!news) {
       res.status(400).json({
+        success: false,
         message: "News does not exist",
       });
       return;
     } else {
       await news.remove();
-      res.status(200).json({ message: "News deleted successfully" });
+      res.status(200).json({
+        success: true,
+        message: "News deleted successfully",
+      });
     }
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: "Server error",
     });
   }

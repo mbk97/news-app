@@ -72,11 +72,7 @@ export const createNewsSchema = Joi.object({
   newsImage: Joi.string().required().messages({
     "string.empty": "newsImage is required",
   }),
-  category: Joi.string()
-    .valid("politics", "sports", "entertainment")
-    .required()
-    .messages({
-      "any.only":
-        "Category must be either 'politics', 'sports' or 'entertainment'",
-    }),
+  category: Joi.string().required().messages({
+    "string.empty": "Category is required",
+  }),
 });
