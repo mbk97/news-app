@@ -3,6 +3,8 @@ export interface IUser {
   email: string;
   password: string;
   role: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: any;
 }
 
 export interface INews {

@@ -51,7 +51,7 @@ const registerUser = async (req: Request, res: Response) => {
       Here are your login details: Email: ${email}\nPassword: ${defaultPassword} <br />
       Please change your password after logging in. <br /> 
       Best regards, <br />
-      Your Team 
+      Your Team.
      </html>`;
 
       await sendEmail(email, subject, text, html);
@@ -183,4 +183,70 @@ const changePassword = async (req: Request, res: Response) => {
   }
 };
 
-export { registerUser, loginUser, changePassword };
+const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400).json({
+      success: false,
+      message: "Email is required!",
+    });
+    return;
+  }
+
+  try {
+    const user = await User.findOne({
+      email,
+    });
+
+    if (!user) {
+      res.status(400).json({
+        success: false,
+        message: "User does not exist",
+      });
+      return;
+    }
+
+    // Generate a secure reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const salt = await genSalt(10);
+    const hashedResetToken = await hash(resetToken, salt);
+
+    // Save the hashed token and expiration time to the user record
+    user.passwordResetToken = hashedResetToken;
+    user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // Token valid for 1 hour
+    await user.save();
+
+    // Send reset token via email
+
+    // Replace /reset-password/${resetToken} with your frontend reset password page.
+    const resetUrl = `${req.protocol}://${req.get(
+      "host",
+    )}/reset-password/${resetToken}`;
+
+    const subject = "Password Reset Request";
+    const text = ``;
+    const html = `
+      <p>Hello ${user.fullname},</p>
+      <p>You requested to reset your password. Please click the link below to set a new password:</p>
+      <a href="${resetUrl}">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you did not request this, please ignore this email.</p>
+      <p>Best regards,<br>Your Team</p>
+    `;
+
+    await sendEmail(user.email, subject, text, html);
+    return res.status(200).json({
+      success: true,
+      message: "Password reset email sent. Please check your inbox.",
+    });
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
+export { registerUser, loginUser, changePassword, forgotPassword };
