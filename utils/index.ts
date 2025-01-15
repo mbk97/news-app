@@ -1,4 +1,5 @@
 import { sign } from "jsonwebtoken";
+import nodemailer from "nodemailer";
 
 export const generateToken = (id: string) => {
   return sign(

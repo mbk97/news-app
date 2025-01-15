@@ -3,6 +3,8 @@ export interface IUser {
   email: string;
   password: string;
   role: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: any;
 }
 
 export interface INews {
@@ -11,4 +13,8 @@ export interface INews {
   createdBy: string;
   newsImage: string;
   category: string;
+}
+
+export interface ICategory {
+  categoryName: string;
 }

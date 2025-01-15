@@ -3,12 +3,15 @@ import { compare, genSalt, hash } from "bcryptjs";
 import User from "../model/userModel";
 import { generateToken } from "../utils";
 import { userLoginSchema, validate } from "../utils/validation";
+import crypto from "crypto";
+import { sendEmail } from "../services/email";
 
 const registerUser = async (req: Request, res: Response) => {
-  const { fullname, email, role, password } = req.body;
+  const { fullname, email, role } = req.body;
 
-  if (!fullname || !email || !role || !password) {
+  if (!fullname || !email || !role) {
     res.status(400).json({
+      success: false,
       message: "All fields are required",
     });
     return;
@@ -21,13 +24,15 @@ const registerUser = async (req: Request, res: Response) => {
 
     if (mailExists) {
       res.status(400).json({
+        success: false,
         message: "User already exist",
       });
       return;
     }
 
+    const defaultPassword = crypto.randomBytes(8).toString("hex");
     const salt = await genSalt(10);
-    const hashedPassword = await hash(password, salt);
+    const hashedPassword = await hash(defaultPassword, salt);
 
     const user = await User.create({
       fullname,
@@ -37,7 +42,22 @@ const registerUser = async (req: Request, res: Response) => {
     });
 
     if (user) {
+      const subject = "Welcome onboard";
+      const text = ``;
+      const html = `<html>
+      <h5\> Hello ${fullname}</h5>,
+      <br />
+      Your account has been created successfully. <br />
+      Here are your login details: Email: ${email}\nPassword: ${defaultPassword} <br />
+      Please change your password after logging in. <br /> 
+      Best regards, <br />
+      Your Team.
+     </html>`;
+
+      await sendEmail(email, subject, text, html);
+
       res.status(201).json({
+        success: true,
         message: "User created successfully",
         data: {
           fullname: user.fullname,
@@ -50,21 +70,22 @@ const registerUser = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       message: "Server error",
+      success: false,
     });
   }
 };
 
 const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  const error = validate(userLoginSchema, req.body);
+  // const error = validate(userLoginSchema, req.body);
 
-  if (error) {
-    res.status(400).json({
-      message: error,
-    });
-
-    return;
-  }
+  // if (error) {
+  //   res.status(400).json({
+  //     message: error,
+  //     success: false,
+  //   });
+  //   return;
+  // }
 
   try {
     const user = await User.findOne({
@@ -74,11 +95,13 @@ const loginUser = async (req: Request, res: Response) => {
     if (!user) {
       res.status(403).json({
         message: "User is not registered",
+        success: false,
       });
       return;
     }
     if (user && (await compare(password, user.password))) {
       res.status(200).json({
+        success: true,
         message: "Login successful",
         user: {
           _id: user._id,
@@ -91,13 +114,139 @@ const loginUser = async (req: Request, res: Response) => {
     } else {
       res.status(400).json({
         message: "Invalid credentials",
+        success: false,
       });
     }
   } catch (error) {
     res.status(500).json({
       message: "Server error",
+      success: false,
     });
   }
 };
 
-export { registerUser, loginUser };
+const changePassword = async (req: Request, res: Response) => {
+  const { email, currentPassword, newPassword } = req.body;
+
+  if (!email || !currentPassword || !newPassword) {
+    res.status(400).json({
+      success: false,
+      message: "Email, current password, and new password are required.",
+    });
+
+    return;
+  }
+
+  try {
+    const user = await User.findOne({
+      email,
+    });
+
+    if (!user) {
+      res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+
+      return;
+    }
+
+    // Compare current password with stored hash
+    const isMatch = await compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect.",
+      });
+      return;
+    }
+
+    // Hash new password
+    const salt = await genSalt(10);
+    const hashedNewPassword = await hash(newPassword, salt);
+
+    // Update user's password
+    user.password = hashedNewPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully.",
+    });
+  } catch (error) {
+    console.error("Error changing default password:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
+const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400).json({
+      success: false,
+      message: "Email is required!",
+    });
+    return;
+  }
+
+  try {
+    const user = await User.findOne({
+      email,
+    });
+
+    if (!user) {
+      res.status(400).json({
+        success: false,
+        message: "User does not exist",
+      });
+      return;
+    }
+
+    // Generate a secure reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const salt = await genSalt(10);
+    const hashedResetToken = await hash(resetToken, salt);
+
+    // Save the hashed token and expiration time to the user record
+    user.passwordResetToken = hashedResetToken;
+    user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // Token valid for 1 hour
+    await user.save();
+
+    // Send reset token via email
+
+    // Replace /reset-password/${resetToken} with your frontend reset password page.
+    const resetUrl = `${req.protocol}://${req.get(
+      "host",
+    )}/reset-password/${resetToken}`;
+
+    const subject = "Password Reset Request";
+    const text = ``;
+    const html = `
+      <p>Hello ${user.fullname},</p>
+      <p>You requested to reset your password. Please click the link below to set a new password:</p>
+      <a href="${resetUrl}">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you did not request this, please ignore this email.</p>
+      <p>Best regards,<br>Your Team</p>
+    `;
+
+    await sendEmail(user.email, subject, text, html);
+    return res.status(200).json({
+      success: true,
+      message: "Password reset email sent. Please check your inbox.",
+    });
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
+export { registerUser, loginUser, changePassword, forgotPassword };
