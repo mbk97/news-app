@@ -79,6 +79,7 @@ export const deleteCategory = async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Failed to delete category. Please try again later.",

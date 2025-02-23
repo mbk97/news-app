@@ -2,7 +2,6 @@ import { Response, Request } from "express";
 import { createNewsSchema, validate } from "../../utils/validation";
 import News from "../../model/newsModel";
 import Category from "../../model/categoryModel";
-import redis from "../../config/redis";
 
 const createNews = async (req: Request, res: Response) => {
   const { newsTitle, newsBody, createdBy, newsImage, category } = req.body;
@@ -49,6 +48,7 @@ const createNews = async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -176,6 +176,7 @@ const updateNews = async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -201,6 +202,7 @@ const deleteNews = async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -214,7 +216,7 @@ const trackNewsView = async (req: Request, res: Response) => {
     const news = await News.findByIdAndUpdate(
       newsId,
       { $inc: { views: 1 } }, // Increment views by 1
-      { new: true },
+      { new: true }
     );
 
     if (!news) {
@@ -262,7 +264,7 @@ const getAllTotalViewsOnNews = async (req: Request, res: Response) => {
 
 const getTopPerformingNewsBasedOnViews = async (
   req: Request,
-  res: Response,
+  res: Response
 ) => {
   try {
     const topNews = await News.find().sort({ views: -1 }).limit(10); // Sort descending by views

@@ -4,7 +4,7 @@ export interface IUser {
   password: string;
   role: string;
   passwordResetToken?: string;
-  passwordResetExpires?: any;
+  passwordResetExpires?: Date | number;
 }
 
 export interface INews {

@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node index.ts",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon index.ts",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "author": "",
   "license": "ISC",
@@ -32,10 +34,10 @@
     "@types/jsonwebtoken": "^8.5.9",
     "@types/lodash": "^4.14.191",
     "@types/nodemailer": "^6.4.6",
-    "@typescript-eslint/eslint-plugin": "^5.42.0",
-    "@typescript-eslint/parser": "^5.42.0",
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
     "bcrypt": "^5.1.0",
-    "eslint": "^8.26.0",
+    "eslint": "^8.57.1",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "jsonwebtoken": "^8.5.1",

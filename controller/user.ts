@@ -2,7 +2,6 @@ import { Response, Request } from "express";
 import { compare, genSalt, hash } from "bcryptjs";
 import User from "../model/userModel";
 import { generateToken } from "../utils";
-import { userLoginSchema, validate } from "../utils/validation";
 import crypto from "crypto";
 import { sendEmail } from "../services/email";
 
@@ -45,8 +44,7 @@ const registerUser = async (req: Request, res: Response) => {
       const subject = "Welcome onboard";
       const text = ``;
       const html = `<html>
-      <h5\> Hello ${fullname}</h5>,
-      <br />
+      <h5>Hello ${fullname}</h5>,
       Your account has been created successfully. <br />
       Here are your login details: Email: ${email}\nPassword: ${defaultPassword} <br />
       Please change your password after logging in. <br /> 
@@ -68,6 +66,7 @@ const registerUser = async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: "Server error",
       success: false,
@@ -118,6 +117,7 @@ const loginUser = async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       message: "Server error",
       success: false,
@@ -216,12 +216,11 @@ const forgotPassword = async (req: Request, res: Response) => {
     user.passwordResetToken = hashedResetToken;
     user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // Token valid for 1 hour
     await user.save();
-
     // Send reset token via email
 
     // Replace /reset-password/${resetToken} with your frontend reset password page.
     const resetUrl = `${req.protocol}://${req.get(
-      "host",
+      "host"
     )}/reset-password/${resetToken}`;
 
     const subject = "Password Reset Request";
