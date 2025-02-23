@@ -13,6 +13,8 @@ export interface INews {
   createdBy: string;
   newsImage: string;
   category: string;
+  publish: boolean;
+  views: number;
 }
 
 export interface ICategory {

@@ -23,6 +23,14 @@ const NewsModel = new Schema<INews>(
       type: String,
       required: true,
     },
+    views: {
+      type: Number,
+      default: 0, // Initialize views at 0
+    },
+    publish: {
+      type: Boolean,
+      required: true,
+    },
   },
   {
     timestamps: true,

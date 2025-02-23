@@ -75,4 +75,7 @@ export const createNewsSchema = Joi.object({
   category: Joi.string().required().messages({
     "string.empty": "Category is required",
   }),
+  publish: Joi.boolean().required().messages({
+    "string.empty": "Published status is required",
+  }),
 });
