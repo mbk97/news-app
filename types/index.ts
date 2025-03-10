@@ -2,9 +2,11 @@ export interface IUser {
   fullname: string;
   email: string;
   password: string;
-  role: string;
+  // role: string;
+  userStatus: boolean;
   passwordResetToken?: string;
   passwordResetExpires?: Date | number;
+  roleName: string;
 }
 
 export interface INews {
@@ -19,4 +21,8 @@ export interface INews {
 
 export interface ICategory {
   categoryName: string;
+}
+
+export interface IRoles {
+  roleName: string;
 }

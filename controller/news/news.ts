@@ -278,6 +278,69 @@ const getTopPerformingNewsBasedOnViews = async (
   }
 };
 
+import mongoose from "mongoose";
+
+const getMonthlyViews = async (req: Request, res: Response) => {
+  try {
+    const monthlyViews = await News.aggregate([
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            year: { $year: "$createdAt" },
+          },
+          totalViews: { $sum: "$views" },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }, // Sort by year and month
+    ]);
+
+    // Array of all month names
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    // Get all unique years from the aggregated data
+    const years = [...new Set(monthlyViews.map((entry) => entry._id.year))];
+
+    // Initialize result with all 12 months and set views to 0 by default
+    const result = years.map((year) => {
+      const monthsData = monthNames.map((month, index) => {
+        // Find the matching month in the aggregated data
+        const existingMonth = monthlyViews.find(
+          (entry) => entry._id.year === year && entry._id.month === index + 1
+        );
+
+        return {
+          month,
+          year,
+          totalViews: existingMonth ? existingMonth.totalViews : 0, // Default to 0 if not found
+        };
+      });
+
+      return { year, months: monthsData };
+    });
+
+    return res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error("Error fetching monthly views:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
 export {
   createNews,
   publishNews,
@@ -291,4 +354,5 @@ export {
   trackNewsView,
   getAllTotalViewsOnNews,
   getTopPerformingNewsBasedOnViews,
+  getMonthlyViews,
 };

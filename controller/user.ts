@@ -4,29 +4,38 @@ import User from "../model/userModel";
 import { generateToken } from "../utils";
 import crypto from "crypto";
 import { sendEmail } from "../services/email";
+import Roles from "../model/roles";
 
 const registerUser = async (req: Request, res: Response) => {
-  const { fullname, email, role } = req.body;
+  const { fullname, email, roleName } = req.body;
 
-  if (!fullname || !email || !role) {
-    res.status(400).json({
+  if (!fullname || !email || !roleName) {
+    return res.status(400).json({
       success: false,
       message: "All fields are required",
     });
-    return;
   }
 
   try {
+    const checkUserRole = await Roles.findOne({
+      roleName,
+    });
+
+    if (!checkUserRole) {
+      return res.status(400).json({
+        message: "Role does not exist",
+      });
+    }
+
     const mailExists = await User.findOne({
       email,
     });
 
     if (mailExists) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "User already exist",
       });
-      return;
     }
 
     const defaultPassword = crypto.randomBytes(8).toString("hex");
@@ -36,7 +45,7 @@ const registerUser = async (req: Request, res: Response) => {
     const user = await User.create({
       fullname,
       email,
-      role,
+      roleName,
       password: hashedPassword,
     });
 
@@ -60,7 +69,7 @@ const registerUser = async (req: Request, res: Response) => {
         data: {
           fullname: user.fullname,
           email: user.email,
-          role: user.role,
+          role: user.roleName,
           token: generateToken(user._id.toString()), // Convert ObjectId to string
         },
       });
@@ -106,7 +115,7 @@ const loginUser = async (req: Request, res: Response) => {
           _id: user._id,
           fullname: user.fullname,
           email: user.email,
-          role: user.role,
+          role: user.roleName,
           token: generateToken(user._id.toString()),
         },
       });
@@ -248,4 +257,42 @@ const forgotPassword = async (req: Request, res: Response) => {
   }
 };
 
-export { registerUser, loginUser, changePassword, forgotPassword };
+const modifyUserStatus = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId).select(
+      "-password -createdAt -passwordResetExpires -passwordResetToken"
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found!" });
+    }
+
+    // Toggle userStatus
+    user.userStatus = !user.userStatus;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "User status updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error modifying user status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
+export {
+  registerUser,
+  loginUser,
+  changePassword,
+  forgotPassword,
+  modifyUserStatus,
+};

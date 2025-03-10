@@ -15,8 +15,13 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
     },
-    role: {
+    roleName: {
       type: String,
+      required: true,
+    },
+    userStatus: {
+      type: Boolean,
+      default: true,
       required: true,
     },
     passwordResetToken: { type: String },
@@ -25,7 +30,7 @@ const userSchema = new Schema<IUser>(
   {
     timestamps: true,
     collection: "admin-users",
-  },
+  }
 );
 
 export default model<IUser>("User", userSchema);

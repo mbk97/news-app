@@ -5,6 +5,7 @@ import {
   getAllNews,
   getAllPublishedNews,
   getAllTotalViewsOnNews,
+  getMonthlyViews,
   getNewById,
   getRecentNews,
   getTopPerformingNewsBasedOnViews,
@@ -24,6 +25,7 @@ newsRouter.get("/recent-news", getRecentNews);
 newsRouter.post("/news-view/:newsId", trackNewsView);
 newsRouter.get("/total-views-on-news", getAllTotalViewsOnNews);
 newsRouter.get("/top-performing-news", getTopPerformingNewsBasedOnViews);
+newsRouter.get("/monthly-views", getMonthlyViews);
 newsRouter.get("/:id", getNewById);
 newsRouter.put("/:id", updateNews);
 newsRouter.put("/publish/:id", publishNews);
