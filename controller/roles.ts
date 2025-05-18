@@ -52,7 +52,6 @@ const deleteRole = async (req: Request, res: Response) => {
 const getAllRoles = async (req: Request, res: Response) => {
   try {
     const roles = await Roles.find();
-    console.log(roles);
 
     res.status(200).json({
       success: true,
@@ -67,4 +66,19 @@ const getAllRoles = async (req: Request, res: Response) => {
   }
 };
 
-export { createRole, deleteRole, getAllRoles };
+const getAllUsersUnderAParticularRole = async (req: Request, res: Response) => {
+  const { roleName } = req.body;
+
+  if (!roleName) {
+    res.status(400).json({
+      message: "Role not found!",
+    });
+  }
+  const usersUnderArole = await Users.find({ roleName });
+  res.status(200).json({
+    message: "success",
+    data: usersUnderArole,
+  });
+};
+
+export { createRole, deleteRole, getAllRoles, getAllUsersUnderAParticularRole };
