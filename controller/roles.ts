@@ -27,7 +27,7 @@ const createRole = async (req: Request, res: Response) => {
       role: newRole,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({
       message: "Internal server error",
     });
@@ -49,9 +49,10 @@ const deleteRole = async (req: Request, res: Response) => {
     data: usersUnderRoleToBeDeleted,
   });
 };
- const getAllRoles = async (req: Request, res: Response) => {
+const getAllRoles = async (req: Request, res: Response) => {
   try {
     const roles = await Roles.find();
+    console.log(roles);
 
     res.status(200).json({
       success: true,
