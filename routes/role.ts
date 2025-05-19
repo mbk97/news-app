@@ -10,6 +10,6 @@ const roleRouter = Router();
 roleRouter.post("/create-role", createRole);
 roleRouter.delete("/delete-role/:id", createRole);
 roleRouter.get("/roles", getAllRoles);
-roleRouter.get("/users-roles", getAllUsersUnderAParticularRole);
+roleRouter.get("/users-roles/:roleName", getAllUsersUnderAParticularRole);
 
 export { roleRouter };

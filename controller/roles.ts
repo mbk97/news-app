@@ -67,7 +67,7 @@ const getAllRoles = async (req: Request, res: Response) => {
 };
 
 const getAllUsersUnderAParticularRole = async (req: Request, res: Response) => {
-  const { roleName } = req.body;
+  const { roleName } = req.params;
 
   if (!roleName) {
     res.status(400).json({
