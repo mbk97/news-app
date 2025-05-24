@@ -27,6 +27,14 @@ const NewsModel = new Schema<INews>(
       type: Number,
       default: 0, // Initialize views at 0
     },
+    viewDates: {
+      type: [Date],
+      default: [],
+    },
+    monthlyViews: {
+      type: Schema.Types.Mixed, // Will store as { year: { month: count } }
+      default: {},
+    },
     publish: {
       type: Boolean,
       required: true,
@@ -35,7 +43,7 @@ const NewsModel = new Schema<INews>(
   {
     timestamps: true,
     collection: "news",
-  },
+  }
 );
 
 export default model<INews>("News", NewsModel);

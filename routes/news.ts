@@ -4,7 +4,7 @@ import {
   deleteNews,
   getAllNews,
   getAllPublishedNews,
-  getAllTotalViewsOnNews,
+  getAllDashboardData,
   getMonthlyViews,
   getMonthlyViewsByCategory,
   getNewById,
@@ -24,7 +24,7 @@ newsRouter.get("/published", getAllPublishedNews);
 newsRouter.get("/total-news", getTotalNews);
 newsRouter.get("/recent-news", getRecentNews);
 newsRouter.post("/news-view/:newsId", trackNewsView);
-newsRouter.get("/total-views-on-news", getAllTotalViewsOnNews);
+newsRouter.get("/dashboard-data", getAllDashboardData);
 newsRouter.get("/top-performing-news", getTopPerformingNewsBasedOnViews);
 newsRouter.get("/monthly-views", getMonthlyViews);
 newsRouter.get("/monthly-category-views", getMonthlyViewsByCategory);

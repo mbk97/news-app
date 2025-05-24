@@ -213,9 +213,21 @@ const deleteNews = async (req: Request, res: Response) => {
 const trackNewsView = async (req: Request, res: Response) => {
   try {
     const { newsId } = req.params;
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+    const currentYear = currentDate.getFullYear();
+    const monthKey = `monthlyViews.${currentYear}.${currentMonth}`;
+
+    // Update both total views and monthly views
     const news = await News.findByIdAndUpdate(
       newsId,
-      { $inc: { views: 1 } }, // Increment views by 1
+      {
+        $inc: {
+          views: 1, // Increment total views
+          [monthKey]: 1, // Increment views for current month
+        },
+        $push: { viewDates: currentDate }, // Add timestamp to viewDates array
+      },
       { new: true }
     );
 
@@ -225,9 +237,16 @@ const trackNewsView = async (req: Request, res: Response) => {
         .json({ success: false, message: "News not found" });
     }
 
-    res
-      .status(200)
-      .json({ success: true, message: "View recorded", views: news.views });
+    // Get the current month's views
+    const currentMonthViews =
+      news.monthlyViews?.[currentYear]?.[currentMonth] || 0;
+
+    res.status(200).json({
+      success: true,
+      message: "View recorded",
+      views: news.views,
+      currentMonthViews,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -237,26 +256,48 @@ const trackNewsView = async (req: Request, res: Response) => {
   }
 };
 
-const getAllTotalViewsOnNews = async (req: Request, res: Response) => {
+const getAllDashboardData = async (req: Request, res: Response) => {
   try {
-    const totalViews = await News.aggregate([
+    // Get total views across all news articles
+    const totalViewsResult = await News.aggregate([
       {
         $group: {
           _id: null,
           totalViews: { $sum: "$views" }, // Sum all views from all news
+          totalArticles: { $sum: 1 }, // Count all articles
+          uniqueAuthors: { $addToSet: "$createdBy" }, // Collect unique authors
         },
       },
     ]);
 
+    // Get unpublished articles
+    const unpublishedArticles = await News.find(
+      { publish: false },
+      { newsTitle: 1, createdAt: 1, createdBy: 1, _id: 1 }
+    );
+
+    // Prepare response data
+    const responseData = {
+      totalViews:
+        totalViewsResult.length > 0 ? totalViewsResult[0].totalViews : 0,
+      totalArticles:
+        totalViewsResult.length > 0 ? totalViewsResult[0].totalArticles : 0,
+      totalAuthors:
+        totalViewsResult.length > 0
+          ? totalViewsResult[0].uniqueAuthors.length
+          : 0,
+      unpublishedArticles: unpublishedArticles,
+    };
+
     res.status(200).json({
       success: true,
-      message: "Total views on all news retrieved successfully",
-      totalViews: totalViews.length > 0 ? totalViews[0].totalViews : 0, // Ensure it doesn't return empty
+      message: "News statistics retrieved successfully",
+      data: responseData,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error retrieving total views",
+      message: "Error retrieving news statistics",
       error: error.message,
     });
   }
@@ -343,23 +384,20 @@ const getMonthlyViewsByCategory = async (req: Request, res: Response) => {
   try {
     // Get month and year from query params or use current month/year
     const today = new Date();
-    const month = parseInt(req.query.month as string) || today.getMonth() + 1; // JS months are 0-indexed
+    const month = parseInt(req.query.month as string) || today.getMonth() + 1;
     const year = parseInt(req.query.year as string) || today.getFullYear();
 
-    // Create date range for the specified month
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0); // Last day of month
-
+    // Aggregate news views by category for the specified month
     const categoryViews = await News.aggregate([
       {
         $match: {
-          createdAt: { $gte: startDate, $lte: endDate },
+          [`monthlyViews.${year}.${month}`]: { $exists: true, $gt: 0 },
         },
       },
       {
         $group: {
           _id: "$category",
-          totalViews: { $sum: "$views" },
+          totalViews: { $sum: `$monthlyViews.${year}.${month}` },
         },
       },
       {
@@ -369,37 +407,28 @@ const getMonthlyViewsByCategory = async (req: Request, res: Response) => {
           views: "$totalViews",
         },
       },
-      {
-        $sort: { views: -1 },
-      },
+      { $sort: { views: -1 } },
     ]);
 
     // Get all categories to ensure we include ones with zero views
     const allCategories = await Category.find({}, { categoryName: 1, _id: 0 });
-
-    // Create a map of existing category views
     const categoryViewsMap = new Map();
+
     categoryViews.forEach((item) => {
       categoryViewsMap.set(item.categoryName, item.views);
     });
 
-    // Create final array with all categories (including those with zero views)
     const result = allCategories.map((cat) => ({
       categoryName: cat.categoryName,
       views: categoryViewsMap.get(cat.categoryName) || 0,
     }));
 
-    // Sort by views (descending)
     result.sort((a, b) => b.views - a.views);
 
     return res.status(200).json({
       success: true,
       message: "Monthly views by category retrieved successfully",
-      data: {
-        month,
-        year,
-        categories: result,
-      },
+      data: { month, year, categories: result },
     });
   } catch (error) {
     console.error("Error fetching monthly category views:", error);
@@ -421,7 +450,7 @@ export {
   getNewById,
   deleteNews,
   trackNewsView,
-  getAllTotalViewsOnNews,
+  getAllDashboardData,
   getTopPerformingNewsBasedOnViews,
   getMonthlyViews,
   getMonthlyViewsByCategory,

@@ -17,6 +17,8 @@ export interface INews {
   category: string;
   publish: boolean;
   views: number;
+  viewDates?: Date[];
+  monthlyViews?: Record<number, Record<number, number>>; // { year: { month: count } }
 }
 
 export interface ICategory {
