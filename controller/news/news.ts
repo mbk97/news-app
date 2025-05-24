@@ -278,8 +278,6 @@ const getTopPerformingNewsBasedOnViews = async (
   }
 };
 
-import mongoose from "mongoose";
-
 const getMonthlyViews = async (req: Request, res: Response) => {
   try {
     const monthlyViews = await News.aggregate([
@@ -341,6 +339,77 @@ const getMonthlyViews = async (req: Request, res: Response) => {
   }
 };
 
+const getMonthlyViewsByCategory = async (req: Request, res: Response) => {
+  try {
+    // Get month and year from query params or use current month/year
+    const today = new Date();
+    const month = parseInt(req.query.month as string) || today.getMonth() + 1; // JS months are 0-indexed
+    const year = parseInt(req.query.year as string) || today.getFullYear();
+
+    // Create date range for the specified month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0); // Last day of month
+
+    const categoryViews = await News.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: "$category",
+          totalViews: { $sum: "$views" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          categoryName: "$_id",
+          views: "$totalViews",
+        },
+      },
+      {
+        $sort: { views: -1 },
+      },
+    ]);
+
+    // Get all categories to ensure we include ones with zero views
+    const allCategories = await Category.find({}, { categoryName: 1, _id: 0 });
+
+    // Create a map of existing category views
+    const categoryViewsMap = new Map();
+    categoryViews.forEach((item) => {
+      categoryViewsMap.set(item.categoryName, item.views);
+    });
+
+    // Create final array with all categories (including those with zero views)
+    const result = allCategories.map((cat) => ({
+      categoryName: cat.categoryName,
+      views: categoryViewsMap.get(cat.categoryName) || 0,
+    }));
+
+    // Sort by views (descending)
+    result.sort((a, b) => b.views - a.views);
+
+    return res.status(200).json({
+      success: true,
+      message: "Monthly views by category retrieved successfully",
+      data: {
+        month,
+        year,
+        categories: result,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching monthly category views:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 export {
   createNews,
   publishNews,
@@ -355,4 +424,5 @@ export {
   getAllTotalViewsOnNews,
   getTopPerformingNewsBasedOnViews,
   getMonthlyViews,
+  getMonthlyViewsByCategory,
 };
