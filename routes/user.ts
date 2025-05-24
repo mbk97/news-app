@@ -5,6 +5,8 @@ import {
   loginUser,
   modifyUserStatus,
   registerUser,
+  getAllUsers,
+  editUser,
 } from "../controller/user";
 
 const userRouter = Router();
@@ -14,5 +16,7 @@ userRouter.post("/login", loginUser);
 userRouter.post("/change-password", changePassword);
 userRouter.post("/reset-password", forgotPassword);
 userRouter.put("/modify-user-status/:userId", modifyUserStatus);
+userRouter.get("/users", getAllUsers);
+userRouter.put("/edit-user/:userId", editUser);
 
 export { userRouter };

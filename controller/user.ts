@@ -85,30 +85,28 @@ const registerUser = async (req: Request, res: Response) => {
 
 const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  // const error = validate(userLoginSchema, req.body);
-
-  // if (error) {
-  //   res.status(400).json({
-  //     message: error,
-  //     success: false,
-  //   });
-  //   return;
-  // }
 
   try {
-    const user = await User.findOne({
-      email,
-    });
+    const user = await User.findOne({ email });
 
     if (!user) {
-      res.status(403).json({
+      return res.status(403).json({
         message: "User is not registered",
         success: false,
       });
-      return;
     }
-    if (user && (await compare(password, user.password))) {
-      res.status(200).json({
+
+    // Check if user is restricted
+    if (!user.userStatus) {
+      return res.status(403).json({
+        message:
+          "Your account has been restricted. Please contact administrator.",
+        success: false,
+      });
+    }
+
+    if (await compare(password, user.password)) {
+      return res.status(200).json({
         success: true,
         message: "Login successful",
         user: {
@@ -120,14 +118,14 @@ const loginUser = async (req: Request, res: Response) => {
         },
       });
     } else {
-      res.status(400).json({
+      return res.status(400).json({
         message: "Invalid credentials",
         success: false,
       });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Server error",
       success: false,
     });
@@ -289,10 +287,95 @@ const modifyUserStatus = async (req: Request, res: Response) => {
   }
 };
 
+const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const { fullname, roleName } = req.query;
+    let query = {};
+
+    if (fullname) {
+      query = { ...query, fullname: { $regex: fullname, $options: "i" } };
+    }
+
+    if (roleName) {
+      query = { ...query, roleName };
+    }
+
+    const users = await User.find(query).select(
+      "-password -passwordResetToken -passwordResetExpires"
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully",
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
+const editUser = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { fullname, roleName } = req.body;
+
+    if (!fullname && !roleName) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one field is required for update",
+      });
+    }
+
+    // Check if role exists if roleName is provided
+    if (roleName) {
+      const checkUserRole = await Roles.findOne({ roleName });
+      if (!checkUserRole) {
+        return res.status(400).json({
+          success: false,
+          message: "Role does not exist",
+        });
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: { ...(fullname && { fullname }), ...(roleName && { roleName }) },
+      },
+      { new: true }
+    ).select("-password -passwordResetToken -passwordResetExpires");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
 export {
   registerUser,
   loginUser,
   changePassword,
   forgotPassword,
   modifyUserStatus,
+  getAllUsers,
+  editUser,
 };
