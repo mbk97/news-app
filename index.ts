@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(
   cors({
-    origin: "http://localhost:5173", // Allow only this origin
+  origin: ["http://localhost:5173", "https://www.naijadaily.ng", "https://naijadaily.vercel.app"], // Allow multiple origins
     methods: ["GET", "POST", "PUT", "DELETE", "PATHCH"], // Allowed HTTP methods
     credentials: true, // Allow cookies and authorization headers
   })
