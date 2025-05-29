@@ -1,10 +1,10 @@
 import { Response, Request } from "express";
 import Category from "../model/categoryModel";
+import { logActivity } from "../utils/logger";
 
 export const getAllCategory = async (req: Request, res: Response) => {
   try {
     const categories = await Category.find();
-
     res.status(200).json({
       success: true,
       data: categories,
@@ -45,6 +45,16 @@ export const createCategory = async (req: Request, res: Response) => {
     // Create new category
     const newCategory = await Category.create({ categoryName });
 
+    // Log category creation
+    await logActivity(
+      req.body.userId || "system", // You might need to add userId to the request
+      "CREATE_CATEGORY",
+      `Category "${categoryName}" was created`,
+      req,
+      newCategory._id.toString(),
+      "Category"
+    );
+
     return res.status(201).json({
       success: true,
       message: "Category successfully created.",
@@ -73,6 +83,17 @@ export const deleteCategory = async (req: Request, res: Response) => {
       return;
     } else {
       await category.remove();
+
+      // Log category deletion
+      await logActivity(
+        req.body.userId || "system",
+        "DELETE_CATEGORY",
+        `Category "${category.categoryName}" was deleted`,
+        req,
+        category._id.toString(),
+        "Category"
+      );
+
       res.status(200).json({
         success: true,
         message: "Category deleted successfully",

@@ -5,6 +5,8 @@ import { generateToken } from "../utils";
 import crypto from "crypto";
 import { sendEmail } from "../services/email";
 import Roles from "../model/roles";
+import ActivityLog from "../model/activityLogModel";
+import { logActivity } from "../utils/logger";
 
 const registerUser = async (req: Request, res: Response) => {
   const { fullname, email, roleName } = req.body;
@@ -50,6 +52,14 @@ const registerUser = async (req: Request, res: Response) => {
     });
 
     if (user) {
+      // Log user creation
+      await logActivity(
+        user._id.toString(),
+        "CREATE_USER",
+        `User ${fullname} was created with role ${roleName}`,
+        req
+      );
+
       const subject = "Welcome onboard";
       const text = ``;
       const html = `<html>
@@ -106,6 +116,14 @@ const loginUser = async (req: Request, res: Response) => {
     }
 
     if (await compare(password, user.password)) {
+      // Log the login activity
+      await logActivity(
+        user._id.toString(),
+        "LOGIN",
+        `User ${user.fullname} logged in`,
+        req
+      );
+
       return res.status(200).json({
         success: true,
         message: "Login successful",
@@ -176,6 +194,14 @@ const changePassword = async (req: Request, res: Response) => {
     user.password = hashedNewPassword;
     await user.save();
 
+    // Log password change
+    await logActivity(
+      user._id.toString(),
+      "CHANGE_PASSWORD",
+      `User ${user.fullname} changed their password`,
+      req
+    );
+
     return res.status(200).json({
       success: true,
       message: "Password updated successfully.",
@@ -242,6 +268,15 @@ const forgotPassword = async (req: Request, res: Response) => {
     `;
 
     await sendEmail(user.email, subject, text, html);
+
+    // Log password reset request
+    await logActivity(
+      user._id.toString(),
+      "RESET_PASSWORD",
+      `User ${user.fullname} requested password reset`,
+      req
+    );
+
     return res.status(200).json({
       success: true,
       message: "Password reset email sent. Please check your inbox.",
@@ -272,6 +307,16 @@ const modifyUserStatus = async (req: Request, res: Response) => {
     // Toggle userStatus
     user.userStatus = !user.userStatus;
     await user.save();
+
+    // Log user status change
+    await logActivity(
+      user._id.toString(),
+      "UPDATE_USER",
+      `User ${user.fullname}'s status changed to ${
+        user.userStatus ? "active" : "inactive"
+      }`,
+      req
+    );
 
     return res.status(200).json({
       success: true,
@@ -356,6 +401,14 @@ const editUser = async (req: Request, res: Response) => {
       });
     }
 
+    // Log user update
+    await logActivity(
+      updatedUser._id.toString(),
+      "UPDATE_USER",
+      `User ${updatedUser.fullname}'s profile was updated`,
+      req
+    );
+
     return res.status(200).json({
       success: true,
       message: "User updated successfully",
@@ -370,12 +423,123 @@ const editUser = async (req: Request, res: Response) => {
   }
 };
 
+const userActivityLog = async (req: Request, res: Response) => {
+  try {
+    const {
+      userId,
+      startDate,
+      endDate,
+      action,
+      page = 1,
+      limit = 10,
+    } = req.query;
+    let query = {};
+
+    // Filter by user if userId is provided
+    if (userId) {
+      query = { ...query, userId };
+    }
+
+    // Filter by action if provided
+    if (action) {
+      query = { ...query, action };
+    }
+
+    // Filter by date range if provided
+    if (startDate && endDate) {
+      query = {
+        ...query,
+        timestamp: {
+          $gte: new Date(startDate as string),
+          $lte: new Date(endDate as string),
+        },
+      };
+    }
+
+    // Calculate pagination values
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination
+    const total = await ActivityLog.countDocuments(query);
+
+    // Get activities from database with pagination
+    const activities = await ActivityLog.find(query)
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .populate("userId", "fullname email");
+
+    return res.status(200).json({
+      success: true,
+      message: "User activities retrieved successfully",
+      data: activities,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user activities:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
+const logoutUser = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Log logout activity
+    await logActivity(
+      userId,
+      "LOGOUT",
+      `User ${user.fullname} logged out`,
+      req
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Error logging out:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
 export {
   registerUser,
   loginUser,
+  logoutUser,
   changePassword,
   forgotPassword,
   modifyUserStatus,
   getAllUsers,
   editUser,
+  userActivityLog,
 };

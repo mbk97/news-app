@@ -7,6 +7,8 @@ import {
   registerUser,
   getAllUsers,
   editUser,
+  userActivityLog,
+  logoutUser,
 } from "../controller/user";
 
 const userRouter = Router();
@@ -18,5 +20,7 @@ userRouter.post("/reset-password", forgotPassword);
 userRouter.put("/modify-user-status/:userId", modifyUserStatus);
 userRouter.get("/users", getAllUsers);
 userRouter.put("/edit-user/:userId", editUser);
+userRouter.get("/activity-logs", userActivityLog);
+userRouter.post("/logout", logoutUser);
 
 export { userRouter };

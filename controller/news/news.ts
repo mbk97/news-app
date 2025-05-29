@@ -2,6 +2,7 @@ import { Response, Request } from "express";
 import { createNewsSchema, validate } from "../../utils/validation";
 import News from "../../model/newsModel";
 import Category from "../../model/categoryModel";
+import { logActivity } from "../../utils/logger";
 
 const createNews = async (req: Request, res: Response) => {
   const { newsTitle, newsBody, createdBy, newsImage, category } = req.body;
@@ -39,6 +40,16 @@ const createNews = async (req: Request, res: Response) => {
     });
 
     if (freshNews) {
+      // Log news creation
+      await logActivity(
+        req.body.createdBy,
+        "CREATE_NEWS",
+        `News article "${newsTitle}" was created`,
+        req,
+        freshNews._id.toString(),
+        "News"
+      );
+
       res.status(201).json({
         success: true,
         message: "News successfully created",
@@ -71,6 +82,16 @@ const publishNews = async (req: Request, res: Response) => {
 
     news.publish = true;
     await news.save(); // Ensure save is awaited
+
+    // Log news publishing
+    await logActivity(
+      req.body.userId || "system", // You might need to add userId to the request
+      "PUBLISH_NEWS",
+      `News article "${news.newsTitle}" was published`,
+      req,
+      news._id.toString(),
+      "News"
+    );
 
     return res.status(200).json({ message: "News is published successfully" });
   } catch (error) {
@@ -168,6 +189,16 @@ const updateNews = async (req: Request, res: Response) => {
       new: true,
     });
 
+    // Log news update
+    await logActivity(
+      req.body.userId || data.createdBy,
+      "UPDATE_NEWS",
+      `News article "${data.newsTitle}" was updated`,
+      req,
+      data._id.toString(),
+      "News"
+    );
+
     if (data) {
       res.status(200).json({
         success: true,
@@ -196,6 +227,17 @@ const deleteNews = async (req: Request, res: Response) => {
       return;
     } else {
       await news.remove();
+
+      // Log news deletion
+      await logActivity(
+        req.body.userId || news.createdBy,
+        "DELETE_NEWS",
+        `News article "${news.newsTitle}" was deleted`,
+        req,
+        news._id.toString(),
+        "News"
+      );
+
       res.status(200).json({
         success: true,
         message: "News deleted successfully",
