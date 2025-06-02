@@ -14,23 +14,51 @@ import {
   publishNews,
   trackNewsView,
   updateNews,
-} from "../controller/news/news";
+} from "../controller/news";
+import { authenticateUser } from "../middlewares/auth";
+import { authorizeRoles } from "../middlewares/roles";
 
 const newsRouter = Router();
 
-newsRouter.post("/create", createNews);
-newsRouter.get("/", getAllNews);
+// Admin routes
+newsRouter.put(
+  "/publish/:id",
+  authenticateUser,
+  authorizeRoles("Admin"),
+  publishNews
+);
+newsRouter.delete(
+  "/:id",
+  authenticateUser,
+  authorizeRoles("Admin"),
+  deleteNews
+);
+newsRouter.post(
+  "/create",
+  authenticateUser,
+  authorizeRoles("Admin", "Editor", "Writer"),
+  createNews
+);
+newsRouter.get("/", authenticateUser, getAllNews);
+newsRouter.get("/total-news", authenticateUser, getTotalNews);
+newsRouter.get("/recent-news", authenticateUser, getRecentNews);
+newsRouter.post("/news-view/:newsId", authenticateUser, trackNewsView);
+newsRouter.get("/dashboard-data", authenticateUser, getAllDashboardData);
+newsRouter.get(
+  "/top-performing-news",
+  authenticateUser,
+  getTopPerformingNewsBasedOnViews
+);
+newsRouter.get("/monthly-views", authenticateUser, getMonthlyViews);
+newsRouter.get(
+  "/monthly-category-views",
+  authenticateUser,
+  getMonthlyViewsByCategory
+);
+newsRouter.put("/:id", authenticateUser, updateNews);
+
+// client side routes
 newsRouter.get("/published", getAllPublishedNews);
-newsRouter.get("/total-news", getTotalNews);
-newsRouter.get("/recent-news", getRecentNews);
-newsRouter.post("/news-view/:newsId", trackNewsView);
-newsRouter.get("/dashboard-data", getAllDashboardData);
-newsRouter.get("/top-performing-news", getTopPerformingNewsBasedOnViews);
-newsRouter.get("/monthly-views", getMonthlyViews);
-newsRouter.get("/monthly-category-views", getMonthlyViewsByCategory);
 newsRouter.get("/:id", getNewById);
-newsRouter.put("/:id", updateNews);
-newsRouter.put("/publish/:id", publishNews);
-newsRouter.delete("/:id", deleteNews);
 
 export { newsRouter };

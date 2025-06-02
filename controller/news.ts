@@ -1,8 +1,9 @@
 import { Response, Request } from "express";
-import { createNewsSchema, validate } from "../../utils/validation";
-import News from "../../model/newsModel";
-import Category from "../../model/categoryModel";
-import { logActivity } from "../../utils/logger";
+import { createNewsSchema, validate } from "../utils/validation";
+import News from "../model/newsModel";
+import Category from "../model/categoryModel";
+import { logActivity } from "../utils/logger";
+import { sendEmail } from "../services/email";
 
 const createNews = async (req: Request, res: Response) => {
   const { newsTitle, newsBody, createdBy, newsImage, category } = req.body;
@@ -40,6 +41,20 @@ const createNews = async (req: Request, res: Response) => {
     });
 
     if (freshNews) {
+      // sendEmail()
+      //! Send email notification to the admin or relevant users
+      const subject = "A New News Article Has Been Created";
+      const text = ``;
+      const html = `<html>
+      <h2>Hello Admin</h2>
+      A new news article titled "${newsTitle}" has been created by ${createdBy}. <br />
+      Please review it at your earliest convenience. <br />
+      <br />
+      Best regards, <br />
+      Naija Daily.
+     </html>`;
+      sendEmail("oyindamola850@gmail.com", subject, text, html);
+
       // Log news creation
       await logActivity(
         req.body.createdBy,
@@ -126,14 +141,33 @@ const getRecentNews = async (req: Request, res: Response) => {
 };
 
 const getAllPublishedNews = async (req: Request, res: Response) => {
-  const publishedNews = await News.find({
-    publish: true,
-  });
-  res.status(200).json({
-    success: true,
-    message: "Successful",
-    data: publishedNews,
-  });
+  try {
+    const { page = 1, limit = 10, category } = req.query;
+    const filter: Record<string, unknown> = { publish: true };
+    if (category) {
+      filter.category = category;
+    }
+    const skip = (Number(page) - 1) * Number(limit);
+    const total = await News.countDocuments(filter);
+    const publishedNews = await News.find(filter)
+      .skip(skip)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 }); // optional sorting by newest first
+    res.status(200).json({
+      success: true,
+      message: "Successful",
+      currentPage: Number(page),
+      totalPages: Math.ceil(total / Number(limit)),
+      totalItems: total,
+      data: publishedNews,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };
 
 const getTotalNews = async (req: Request, res: Response) => {
