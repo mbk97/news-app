@@ -215,6 +215,70 @@ const changePassword = async (req: Request, res: Response) => {
     });
   }
 };
+const resetPassword = async (req: Request, res: Response) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({
+      success: false,
+      message: "Password is required",
+    });
+  }
+
+  try {
+    // Find the user by comparing the hashed token
+    const users = await User.find({
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    let matchedUser: (typeof users)[0] | null = null;
+
+    for (const user of users) {
+      const isMatch = await compare(token, user.passwordResetToken);
+      if (isMatch) {
+        matchedUser = user;
+        break;
+      }
+    }
+
+    if (!matchedUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+    }
+
+    // Hash the new password
+    const salt = await genSalt(10);
+    const hashedPassword = await hash(password, salt);
+
+    // Update the user's password and clear reset fields
+    matchedUser.password = hashedPassword;
+    matchedUser.passwordResetToken = undefined;
+    matchedUser.passwordResetExpires = undefined;
+    await matchedUser.save();
+
+    // Log password reset
+    await logActivity(
+      matchedUser._id.toString(),
+      "RESET_PASSWORD_SUCCESS",
+      `User ${matchedUser.fullname} successfully reset their password`,
+      req
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Password has been reset successfully",
+    });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
 
 const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.body;
@@ -536,6 +600,7 @@ export {
   loginUser,
   logoutUser,
   changePassword,
+  resetPassword,
   forgotPassword,
   modifyUserStatus,
   getAllUsers,

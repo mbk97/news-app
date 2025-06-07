@@ -9,6 +9,7 @@ import {
   editUser,
   userActivityLog,
   logoutUser,
+  resetPassword,
 } from "../controller/user";
 import { authenticateUser } from "../middlewares/auth";
 import { authorizeRoles } from "../middlewares/roles";
@@ -19,6 +20,7 @@ userRouter.post("/register", registerUser);
 userRouter.post("/login", loginUser);
 userRouter.post("/change-password", authenticateUser, changePassword);
 userRouter.post("/reset-password", forgotPassword);
+userRouter.post("/reset-password/:token", resetPassword);
 userRouter.put(
   "/modify-user-status/:userId",
   authenticateUser,
