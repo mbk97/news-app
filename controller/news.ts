@@ -115,14 +115,54 @@ const publishNews = async (req: Request, res: Response) => {
 };
 
 const getAllNews = async (req: Request, res: Response) => {
-  const news = await News.find();
-  res.status(200).json({
-    success: true,
-    message: "Successful",
-    data: news,
-  });
-};
+  try {
+    const {
+      newsTitle = "",
+      category = "",
+      createdBy = "",
+      dateFrom = "",
+      dateTo = "",
+      pageNo = 1,
+      pageSize = 10,
+    } = req.query;
 
+    // Build dynamic filter
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filter: Record<string, any> = {};
+
+    if (newsTitle) filter.newsTitle = { $regex: newsTitle, $options: "i" };
+    if (category) filter.category = category;
+    if (createdBy) filter.createdBy = { $regex: createdBy, $options: "i" };
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom as string);
+      if (dateTo) filter.createdAt.$lte = new Date(dateTo as string);
+    }
+
+    const skip = (Number(pageNo) - 1) * Number(pageSize);
+    const total = await News.countDocuments(filter);
+    const news = await News.find(filter)
+      .skip(skip)
+      .limit(Number(pageSize))
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      message: "Successful",
+      currentPage: Number(pageNo),
+      totalPages: Math.ceil(total / Number(pageSize)),
+      totalItems: total,
+      data: news,
+    });
+  } catch (error) {
+    console.error("Error fetching news:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
 const getRecentNews = async (req: Request, res: Response) => {
   try {
     const recentNews = await News.find().sort({ createdAt: -1 }).limit(10);
