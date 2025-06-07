@@ -21,9 +21,10 @@ app.use(
       "http://localhost:5173",
       "https://www.naijadaily.ng",
       "https://naijadaily.vercel.app",
-      "https://news-admin-app-fe.vercel.app/",
+      "https://news-admin-app-fe.vercel.app",
+      "https://news-admin-app-938zf28pk-mbk97s-projects.vercel.app",
     ], // Allow multiple origins
-    methods: ["GET", "POST", "PUT", "DELETE", "PATHCH"], // Allowed HTTP methods
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
     credentials: true, // Allow cookies and authorization headers
   })
 );
