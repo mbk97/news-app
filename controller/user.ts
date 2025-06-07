@@ -251,10 +251,9 @@ const forgotPassword = async (req: Request, res: Response) => {
     await user.save();
     // Send reset token via email
 
-    // Replace /reset-password/${resetToken} with your frontend reset password page.
-    const resetUrl = `${req.protocol}://${req.get(
-      "http://localhost:5173"
-    )}/reset-password/${resetToken}`;
+    const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
+    const resetUrl = `${CLIENT_URL}/reset-password/${resetToken}`;
 
     const subject = "Password Reset Request";
     const text = ``;
