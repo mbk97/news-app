@@ -50,7 +50,7 @@ const registerUser = async (req: Request, res: Response) => {
 
     const user = await User.create({
       fullname,
-      email,
+      email: userEmail,
       roleName,
       password: hashedPassword,
     });
@@ -102,6 +102,7 @@ const loginUser = async (req: Request, res: Response) => {
 
   try {
     const userEmail = email.toLowerCase();
+
     const user = await User.findOne({
       email: userEmail,
     });
