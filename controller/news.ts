@@ -6,7 +6,8 @@ import { logActivity } from "../utils/logger";
 import { sendEmail } from "../services/email";
 
 const createNews = async (req: Request, res: Response) => {
-  const { newsTitle, newsBody, createdBy, newsImage, category } = req.body;
+  const { newsTitle, newsBody, createdBy, newsImage, category, subHeadline } =
+    req.body;
 
   const error = validate(createNewsSchema, req.body);
 
@@ -37,6 +38,7 @@ const createNews = async (req: Request, res: Response) => {
       newsImage,
       createdBy,
       category,
+      subHeadline,
       publish: false,
     });
 

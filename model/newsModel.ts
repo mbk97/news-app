@@ -7,6 +7,10 @@ const NewsModel = new Schema<INews>(
       type: String,
       required: true,
     },
+    subHeadline: {
+      type: String,
+      required: true,
+    },
     newsBody: {
       type: String,
       required: true,
