@@ -9,7 +9,8 @@ const NewsModel = new Schema<INews>(
     },
     subHeadline: {
       type: String,
-      required: true,
+      required: false, // Optional field
+      default: "", // Default to empty string if not provided
     },
     newsBody: {
       type: String,
