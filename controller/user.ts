@@ -320,8 +320,7 @@ const forgotPassword = async (req: Request, res: Response) => {
     await user.save();
     // Send reset token via email
 
-    const CLIENT_URL = "http://localhost:5173";
-    // const CLIENT_URL = process.env.CLIENT_URL;
+    const CLIENT_URL = process.env.CLIENT_URL;
 
     // const CLIENT_URL =
     //   process.env.NODE_ENV === "development"
