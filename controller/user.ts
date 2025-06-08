@@ -18,6 +18,8 @@ const registerUser = async (req: Request, res: Response) => {
     });
   }
 
+  const userEmail = email.toLowerCase();
+
   try {
     const checkUserRole = await Roles.findOne({
       roleName,
@@ -30,7 +32,7 @@ const registerUser = async (req: Request, res: Response) => {
     }
 
     const mailExists = await User.findOne({
-      email,
+      userEmail,
     });
 
     if (mailExists) {
@@ -97,7 +99,10 @@ const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const userEmail = email.toLowerCase();
+    const user = await User.findOne({
+      userEmail,
+    });
 
     if (!user) {
       return res.status(403).json({
@@ -315,7 +320,7 @@ const forgotPassword = async (req: Request, res: Response) => {
     await user.save();
     // Send reset token via email
 
-    const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+    const CLIENT_URL = process.env.CLIENT_URL;
 
     const resetUrl = `${CLIENT_URL}/reset-password/${resetToken}`;
 
