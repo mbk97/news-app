@@ -320,12 +320,13 @@ const forgotPassword = async (req: Request, res: Response) => {
     await user.save();
     // Send reset token via email
 
+    const CLIENT_URL = "http://localhost:5173";
     // const CLIENT_URL = process.env.CLIENT_URL;
 
-    const CLIENT_URL =
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:5173"
-        : "https://news-admin-app-fe.vercel.app"; // Replace with your actual client URL
+    // const CLIENT_URL =
+    //   process.env.NODE_ENV === "development"
+    //     ? "http://localhost:5173"
+    //     : "https://news-admin-app-fe.vercel.app"; // Replace with your actual client URL
 
     const resetUrl = `${CLIENT_URL}/reset-password/${resetToken}`;
 
