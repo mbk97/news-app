@@ -169,9 +169,11 @@ const changePassword = async (req: Request, res: Response) => {
     return;
   }
 
+  const userEmail = email.toLowerCase();
+
   try {
     const user = await User.findOne({
-      email,
+      email: userEmail,
     });
 
     if (!user) {
@@ -297,10 +299,10 @@ const forgotPassword = async (req: Request, res: Response) => {
     });
     return;
   }
-
+  const userEmail = email.toLowerCase();
   try {
     const user = await User.findOne({
-      email,
+      email: userEmail,
     });
 
     if (!user) {
