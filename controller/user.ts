@@ -7,6 +7,7 @@ import { sendEmail } from "../services/email";
 import Roles from "../model/roles";
 import ActivityLog from "../model/activityLogModel";
 import { logActivity } from "../utils/logger";
+import { console } from "inspector";
 
 const registerUser = async (req: Request, res: Response) => {
   const { fullname, email, roleName } = req.body;
@@ -19,6 +20,7 @@ const registerUser = async (req: Request, res: Response) => {
   }
 
   const userEmail = email.toLowerCase();
+  console.log("Registering user with email:", userEmail);
 
   try {
     const checkUserRole = await Roles.findOne({
@@ -32,7 +34,7 @@ const registerUser = async (req: Request, res: Response) => {
     }
 
     const mailExists = await User.findOne({
-      userEmail,
+      email: userEmail,
     });
 
     if (mailExists) {
@@ -101,7 +103,7 @@ const loginUser = async (req: Request, res: Response) => {
   try {
     const userEmail = email.toLowerCase();
     const user = await User.findOne({
-      userEmail,
+      email: userEmail,
     });
 
     if (!user) {
