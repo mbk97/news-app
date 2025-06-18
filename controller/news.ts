@@ -427,8 +427,8 @@ const getTopPerformingNewsBasedOnViews = async (
 ) => {
   try {
     const topNews = await News.find().sort({ views: -1 }).limit(10); // Sort descending by views
-
-    return res.status(200).json({ success: true, data: topNews });
+    const topResult = topNews.filter((news) => news.views > 10); // Only return items with views > 10
+    return res.status(200).json({ success: true, data: topResult });
   } catch (error) {
     console.error("Error fetching top news:", error);
     return res
