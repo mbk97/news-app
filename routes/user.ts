@@ -11,16 +11,36 @@ import {
   logoutUser,
   resetPassword,
 } from "../controller/user";
-import { authenticateUser } from "../middlewares/auth";
-import { authorizeRoles } from "../middlewares/roles";
+import { authenticateUser } from "../middlewares/authenticator";
+import {
+  changePasswordValidatorMiddleware,
+  passwordValidatorMiddleware,
+  loginRouteValidatorMiddleware,
+  registerUserValidatorMiddleware,
+  forgotpasswordValidatorMiddleware,
+} from "../middlewares/auth";
+import { authorizeRoles } from "../middlewares/roleBasedPermission";
 
 const userRouter = Router();
 
-userRouter.post("/register", registerUser);
-userRouter.post("/login", loginUser);
-userRouter.post("/change-password", authenticateUser, changePassword);
-userRouter.post("/reset-password", forgotPassword);
-userRouter.post("/reset-password/:token", resetPassword);
+userRouter.post("/register", registerUserValidatorMiddleware, registerUser);
+userRouter.post("/login", loginRouteValidatorMiddleware, loginUser);
+userRouter.post(
+  "/change-password",
+  authenticateUser,
+  changePasswordValidatorMiddleware,
+  changePassword
+);
+userRouter.post(
+  "/reset-password",
+  forgotpasswordValidatorMiddleware,
+  forgotPassword
+);
+userRouter.post(
+  "/reset-password/:token",
+  passwordValidatorMiddleware,
+  resetPassword
+);
 userRouter.put(
   "/modify-user-status/:userId",
   authenticateUser,
@@ -43,7 +63,7 @@ userRouter.get(
 userRouter.post(
   "/logout",
   authenticateUser,
-  authorizeRoles("Admin"),
+  // authorizeRoles("Admin"),
   logoutUser
 );
 

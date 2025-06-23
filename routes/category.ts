@@ -4,8 +4,8 @@ import {
   deleteCategory,
   getAllCategory,
 } from "../controller/category";
-import { authenticateUser } from "../middlewares/auth";
-import { authorizeRoles } from "../middlewares/roles";
+import { authenticateUser } from "../middlewares/authenticator";
+import { authorizeRoles } from "../middlewares/roleBasedPermission";
 
 const categoryRouter = Router();
 

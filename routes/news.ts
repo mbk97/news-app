@@ -15,8 +15,8 @@ import {
   trackNewsView,
   updateNews,
 } from "../controller/news";
-import { authenticateUser } from "../middlewares/auth";
-import { authorizeRoles } from "../middlewares/roles";
+import { authenticateUser } from "../middlewares/authenticator";
+import { authorizeRoles } from "../middlewares/roleBasedPermission";
 
 const newsRouter = Router();
 

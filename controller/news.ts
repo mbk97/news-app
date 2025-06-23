@@ -1,9 +1,10 @@
 import { Response, Request } from "express";
-import { createNewsSchema, validate } from "../utils/validation";
+import { createNewsSchema } from "../schema/auth";
 import News from "../model/newsModel";
 import Category from "../model/categoryModel";
 import { logActivity } from "../utils/logger";
-import { sendEmail } from "../services/email";
+import { sendEmail } from "../utils/email";
+import { validate } from "../schema";
 
 const createNews = async (req: Request, res: Response) => {
   const { newsTitle, newsBody, createdBy, newsImage, category, subHeadline } =
