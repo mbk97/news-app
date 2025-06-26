@@ -1,86 +1,47 @@
 import { Response, Request } from "express";
-import { createNewsSchema } from "../schema/auth";
 import News from "../model/newsModel";
 import Category from "../model/categoryModel";
 import { logActivity } from "../utils/logger";
-import { sendEmail } from "../utils/email";
-import { validate } from "../schema";
+import {
+  createNewsService,
+  deleteNewsService,
+  getAllNewsService,
+  getAllPublishedNewsService,
+  getNewsByIdService,
+  getRecentNewsService,
+  getTotalNewsService,
+  publishNewsService,
+  trackNewsViewService,
+  updateNewsService,
+} from "../services/news";
+import { sendCreateNewsEmail } from "../services/email";
 
 const createNews = async (req: Request, res: Response) => {
-  const { newsTitle, newsBody, createdBy, newsImage, category, subHeadline } =
-    req.body;
-
-  const error = validate(createNewsSchema, req.body);
-
-  if (error) {
-    res.status(400).json({
-      success: false,
-      message: error,
-    });
-    return;
-  }
-
+  const { newsTitle, createdBy } = req.body;
   try {
-    const checkIfCategoryIsCorrect = await Category.findOne({
-      categoryName: { $regex: `^${category}$`, $options: "i" },
-    });
-
-    if (!checkIfCategoryIsCorrect) {
-      res.status(400).json({
-        success: false,
-        message: "Category does not exist",
-      });
-      return;
-    }
-
-    const freshNews = await News.create({
-      newsTitle,
-      newsBody,
-      newsImage,
-      createdBy,
-      category,
-      subHeadline,
-      publish: false,
-    });
-
-    if (freshNews) {
-      // sendEmail()
-      //! Send email notification to the admin or relevant users
-      const subject = "A New News Article Has Been Created";
-      const text = ``;
-      const html = `<html>
-      <h2>Hello Admin</h2>
-      A new news article titled "${newsTitle}" has been created by ${createdBy}. <br />
-      Please review it at your earliest convenience. <br />
-      <br />
-      Best regards, <br />
-      Naija Daily.
-     </html>`;
-      sendEmail("oyindamola850@gmail.com", subject, text, html);
-
-      // Log news creation
-      await logActivity(
+    const { freshNews } = await createNewsService(req.body);
+    await Promise.all([
+      logActivity(
         req.body.createdBy,
         "CREATE_NEWS",
         `News article "${newsTitle}" was created`,
         req,
         freshNews._id.toString(),
         "News"
-      );
-
-      res.status(201).json({
-        success: true,
-        message: "News successfully created",
-        data: {
-          freshNews,
-        },
-      });
-    }
+      ),
+      sendCreateNewsEmail({ newsTitle, createdBy }),
+    ]);
+    res.status(201).json({
+      success: true,
+      message: "News successfully created",
+      data: {
+        freshNews,
+      },
+    });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: error.message || "Server error",
     });
   }
 };
@@ -88,20 +49,8 @@ const createNews = async (req: Request, res: Response) => {
 const publishNews = async (req: Request, res: Response) => {
   try {
     const newsId = req.params.id;
-    const news = await News.findById(newsId);
+    const { news } = await publishNewsService(newsId);
 
-    if (!news) {
-      return res.status(404).json({ message: "News not found" });
-    }
-
-    if (news.publish) {
-      return res.status(409).json({ message: "News is already published" });
-    }
-
-    news.publish = true;
-    await news.save(); // Ensure save is awaited
-
-    // Log news publishing
     await logActivity(
       req.body.userId || "system", // You might need to add userId to the request
       "PUBLISH_NEWS",
@@ -110,10 +59,11 @@ const publishNews = async (req: Request, res: Response) => {
       news._id.toString(),
       "News"
     );
-
     return res.status(200).json({ message: "News is published successfully" });
   } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error", error });
+    return res
+      .status(500)
+      .json({ message: error.message || "Internal Server Error" });
   }
 };
 
@@ -129,27 +79,15 @@ const getAllNews = async (req: Request, res: Response) => {
       pageSize = 10,
     } = req.query;
 
-    // Build dynamic filter
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const filter: Record<string, any> = {};
-
-    if (newsTitle) filter.newsTitle = { $regex: newsTitle, $options: "i" };
-    if (category) filter.category = category;
-    if (createdBy) filter.createdBy = { $regex: createdBy, $options: "i" };
-    if (dateFrom || dateTo) {
-      filter.createdAt = {};
-      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom as string);
-      if (dateTo) filter.createdAt.$lte = new Date(dateTo as string);
-    }
-
-    const skip = (Number(pageNo) - 1) * Number(pageSize);
-    const total = await News.countDocuments(filter);
-    const news = await News.find(filter)
-      .skip(skip)
-      .limit(Number(pageSize))
-      .sort({ createdAt: -1 });
-
+    const { news, total } = await getAllNewsService({
+      newsTitle,
+      category,
+      createdBy,
+      dateFrom,
+      dateTo,
+      pageNo,
+      pageSize,
+    });
     res.status(200).json({
       success: true,
       message: "Successful",
@@ -159,16 +97,16 @@ const getAllNews = async (req: Request, res: Response) => {
       data: news,
     });
   } catch (error) {
-    console.error("Error fetching news:", error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: error.message || "Server error",
     });
   }
 };
+
 const getRecentNews = async (req: Request, res: Response) => {
   try {
-    const recentNews = await News.find().sort({ createdAt: -1 }).limit(10);
+    const { recentNews } = await getRecentNewsService();
     res.status(200).json({
       success: true,
       message: "Successfully retrieved recent news",
@@ -177,8 +115,7 @@ const getRecentNews = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error retrieving news",
-      error: error.message,
+      message: error.message || "Error retrieving news",
     });
   }
 };
@@ -186,16 +123,13 @@ const getRecentNews = async (req: Request, res: Response) => {
 const getAllPublishedNews = async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 10, category } = req.query;
-    const filter: Record<string, unknown> = { publish: true };
-    if (category) {
-      filter.category = category;
-    }
-    const skip = (Number(page) - 1) * Number(limit);
-    const total = await News.countDocuments(filter);
-    const publishedNews = await News.find(filter)
-      .skip(skip)
-      .limit(Number(limit))
-      .sort({ createdAt: -1 }); // optional sorting by newest first
+
+    const { total, publishedNews } = await getAllPublishedNewsService({
+      page,
+      limit,
+      category,
+    });
+
     res.status(200).json({
       success: true,
       message: "Successful",
@@ -205,18 +139,15 @@ const getAllPublishedNews = async (req: Request, res: Response) => {
       data: publishedNews,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: error.message || "Server error",
     });
   }
 };
 
 const getTotalNews = async (req: Request, res: Response) => {
-  const news = await News.find();
-  const totalNews = news.length;
-
+  const { totalNews } = await getTotalNewsService();
   res.status(200).json({
     success: true,
     message: "Successful",
@@ -226,46 +157,28 @@ const getTotalNews = async (req: Request, res: Response) => {
 
 const getNewById = async (req: Request, res: Response) => {
   const id = req.params.id;
-  const news = await News.findById(id);
-  if (news) {
+
+  try {
+    const { news } = await getNewsByIdService(id);
     res.status(200).json({
       success: true,
       data: news,
       message: "Successful",
     });
-  } else {
-    res.status(400).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: "News not found",
+      message: error.message || "Server error",
     });
-    return;
   }
 };
 
 const updateNews = async (req: Request, res: Response) => {
   const id = req.params.id;
-  const error = validate(createNewsSchema, req.body);
-  if (error) {
-    res.status(400).json({
-      success: false,
-      message: error,
-    });
-    return;
-  }
+  const body = req.body;
+
   try {
-    const newsToBeUpdated = await News.findById(id);
-    if (!newsToBeUpdated) {
-      res.status(400).json({
-        success: false,
-        message: "News does not exist",
-      });
-      return;
-    }
-
-    const data = await News.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
-
+    const { data } = await updateNewsService({ id, body });
     // Log news update
     await logActivity(
       req.body.userId || data.createdBy,
@@ -275,19 +188,15 @@ const updateNews = async (req: Request, res: Response) => {
       data._id.toString(),
       "News"
     );
-
-    if (data) {
-      res.status(200).json({
-        success: true,
-        message: "News updated",
-        data,
-      });
-    }
+    res.status(200).json({
+      success: true,
+      message: "News updated",
+      data,
+    });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: error.message || "Server error",
     });
   }
 };
@@ -295,36 +204,24 @@ const updateNews = async (req: Request, res: Response) => {
 const deleteNews = async (req: Request, res: Response) => {
   const id = req.params.id;
   try {
-    const news = await News.findById(id);
-    if (!news) {
-      res.status(400).json({
-        success: false,
-        message: "News does not exist",
-      });
-      return;
-    } else {
-      await news.remove();
-
-      // Log news deletion
-      await logActivity(
-        req.body.userId || news.createdBy,
-        "DELETE_NEWS",
-        `News article "${news.newsTitle}" was deleted`,
-        req,
-        news._id.toString(),
-        "News"
-      );
-
-      res.status(200).json({
-        success: true,
-        message: "News deleted successfully",
-      });
-    }
+    const { news } = await deleteNewsService(id);
+    // Log news deletion
+    await logActivity(
+      req.body.userId || news.createdBy,
+      "DELETE_NEWS",
+      `News article "${news.newsTitle}" was deleted`,
+      req,
+      news._id.toString(),
+      "News"
+    );
+    res.status(200).json({
+      success: true,
+      message: "News deleted successfully",
+    });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: error.message || "Server error",
     });
   }
 };
@@ -332,34 +229,7 @@ const deleteNews = async (req: Request, res: Response) => {
 const trackNewsView = async (req: Request, res: Response) => {
   try {
     const { newsId } = req.params;
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; // 1-12
-    const currentYear = currentDate.getFullYear();
-    const monthKey = `monthlyViews.${currentYear}.${currentMonth}`;
-
-    // Update both total views and monthly views
-    const news = await News.findByIdAndUpdate(
-      newsId,
-      {
-        $inc: {
-          views: 1, // Increment total views
-          [monthKey]: 1, // Increment views for current month
-        },
-        $push: { viewDates: currentDate }, // Add timestamp to viewDates array
-      },
-      { new: true }
-    );
-
-    if (!news) {
-      return res
-        .status(404)
-        .json({ success: false, message: "News not found" });
-    }
-
-    // Get the current month's views
-    const currentMonthViews =
-      news.monthlyViews?.[currentYear]?.[currentMonth] || 0;
-
+    const { news, currentMonthViews } = await trackNewsViewService(newsId);
     res.status(200).json({
       success: true,
       message: "View recorded",
@@ -369,8 +239,7 @@ const trackNewsView = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error tracking view",
-      error: error.message,
+      message: error.message || "Error tracking view",
     });
   }
 };

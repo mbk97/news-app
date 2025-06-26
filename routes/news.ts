@@ -17,6 +17,7 @@ import {
 } from "../controller/news";
 import { authenticateUser } from "../middlewares/authenticator";
 import { authorizeRoles } from "../middlewares/roleBasedPermission";
+import { createNewsValidatorMiddleware } from "../middlewares/news";
 
 const newsRouter = Router();
 
@@ -36,6 +37,7 @@ newsRouter.delete(
 newsRouter.post(
   "/create",
   authenticateUser,
+  createNewsValidatorMiddleware,
   authorizeRoles("Admin", "Editor", "Writer"),
   createNews
 );
@@ -55,7 +57,12 @@ newsRouter.get(
   authenticateUser,
   getMonthlyViewsByCategory
 );
-newsRouter.put("/:id", authenticateUser, updateNews);
+newsRouter.put(
+  "/:id",
+  authenticateUser,
+  createNewsValidatorMiddleware,
+  updateNews
+);
 
 // client side routes
 newsRouter.get("/published", getAllPublishedNews);
