@@ -10,8 +10,9 @@ export const userRegistrationSchema = Joi.object({
     "string.email": "Please enter a valid email address",
     "string.empty": "Email is required",
   }),
-  role: Joi.string().valid("admin", "user").required().messages({
-    "any.only": "Role must be either 'admin' or 'user'",
+  roleName: Joi.string().required().messages({
+    "string.empty": "Role name is required",
+    "any.required": "Role name is required",
   }),
 });
 

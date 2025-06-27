@@ -44,7 +44,7 @@ newsRouter.post(
 newsRouter.get("/", authenticateUser, getAllNews);
 newsRouter.get("/total-news", authenticateUser, getTotalNews);
 newsRouter.get("/recent-news", authenticateUser, getRecentNews);
-newsRouter.post("/news-view/:newsId", authenticateUser, trackNewsView);
+
 newsRouter.get("/dashboard-data", authenticateUser, getAllDashboardData);
 newsRouter.get(
   "/top-performing-news",
@@ -67,5 +67,6 @@ newsRouter.put(
 // client side routes
 newsRouter.get("/published", getAllPublishedNews);
 newsRouter.get("/:id", getNewById);
+newsRouter.post("/news-view/:newsId", trackNewsView);
 
 export { newsRouter };
