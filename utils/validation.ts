@@ -58,7 +58,7 @@ export const userLoginSchema = Joi.object({
 });
 
 export const createNewsSchema = Joi.object({
-  newsTitle: Joi.string().min(10).max(100).required().messages({
+  newsTitle: Joi.string().min(10).required().messages({
     "string.empty": "newsTitle is required",
     "string.min": "newsTitle must be at least 50 characters long",
     "string.max": "newsTitle cannot exceed 100 characters",
