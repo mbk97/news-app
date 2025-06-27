@@ -1,16 +1,18 @@
 import { Response, Request } from "express";
-import News from "../model/newsModel";
-import Category from "../model/categoryModel";
 import { logActivity } from "../utils/logger";
 import {
   createNewsService,
   deleteNewsService,
+  getAllDashboardDataService,
   getAllNewsService,
   getAllPublishedNewsService,
   getNewsByIdService,
   getRecentNewsService,
   getTotalNewsService,
+  monthlyViewsByCategoryService,
+  monthlyViewsService,
   publishNewsService,
+  topPerformingNewsService,
   trackNewsViewService,
   updateNewsService,
 } from "../services/news";
@@ -246,25 +248,9 @@ const trackNewsView = async (req: Request, res: Response) => {
 
 const getAllDashboardData = async (req: Request, res: Response) => {
   try {
-    // Get total views across all news articles
-    const totalViewsResult = await News.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalViews: { $sum: "$views" }, // Sum all views from all news
-          totalArticles: { $sum: 1 }, // Count all articles
-          uniqueAuthors: { $addToSet: "$createdBy" }, // Collect unique authors
-        },
-      },
-    ]);
+    const { totalViewsResult, unpublishedArticles } =
+      await getAllDashboardDataService();
 
-    // Get unpublished articles
-    const unpublishedArticles = await News.find(
-      { publish: false },
-      { newsTitle: 1, createdAt: 1, createdBy: 1, _id: 1 }
-    );
-
-    // Prepare response data
     const responseData = {
       totalViews:
         totalViewsResult.length > 0 ? totalViewsResult[0].totalViews : 0,
@@ -285,8 +271,7 @@ const getAllDashboardData = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error retrieving news statistics",
-      error: error.message,
+      message: error.message || "Error retrieving news statistics",
     });
   }
 };
@@ -296,133 +281,46 @@ const getTopPerformingNewsBasedOnViews = async (
   res: Response
 ) => {
   try {
-    const topNews = await News.find().sort({ views: -1 }).limit(10); // Sort descending by views
-    const topResult = topNews.filter((news) => news.views > 10); // Only return items with views > 10
+    const { topResult } = await topPerformingNewsService();
     return res.status(200).json({ success: true, data: topResult });
   } catch (error) {
-    console.error("Error fetching top news:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
 const getMonthlyViews = async (req: Request, res: Response) => {
   try {
-    const monthlyViews = await News.aggregate([
-      {
-        $group: {
-          _id: {
-            month: { $month: "$createdAt" },
-            year: { $year: "$createdAt" },
-          },
-          totalViews: { $sum: "$views" },
-        },
-      },
-      { $sort: { "_id.year": 1, "_id.month": 1 } }, // Sort by year and month
-    ]);
-
-    // Array of all month names
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-
-    // Get all unique years from the aggregated data
-    const years = [...new Set(monthlyViews.map((entry) => entry._id.year))];
-
-    // Initialize result with all 12 months and set views to 0 by default
-    const result = years.map((year) => {
-      const monthsData = monthNames.map((month, index) => {
-        // Find the matching month in the aggregated data
-        const existingMonth = monthlyViews.find(
-          (entry) => entry._id.year === year && entry._id.month === index + 1
-        );
-
-        return {
-          month,
-          year,
-          totalViews: existingMonth ? existingMonth.totalViews : 0, // Default to 0 if not found
-        };
-      });
-
-      return { year, months: monthsData };
-    });
-
+    const { result } = await monthlyViewsService();
     return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error("Error fetching monthly views:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
 const getMonthlyViewsByCategory = async (req: Request, res: Response) => {
   try {
-    // Get month and year from query params or use current month/year
-    const today = new Date();
-    const month = parseInt(req.query.month as string) || today.getMonth() + 1;
-    const year = parseInt(req.query.year as string) || today.getFullYear();
+    const monthParam = req.params.month;
+    const yearParam = req.params.year;
 
-    // Aggregate news views by category for the specified month
-    const categoryViews = await News.aggregate([
-      {
-        $match: {
-          [`monthlyViews.${year}.${month}`]: { $exists: true, $gt: 0 },
-        },
-      },
-      {
-        $group: {
-          _id: "$category",
-          totalViews: { $sum: `$monthlyViews.${year}.${month}` },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          categoryName: "$_id",
-          views: "$totalViews",
-        },
-      },
-      { $sort: { views: -1 } },
-    ]);
-
-    // Get all categories to ensure we include ones with zero views
-    const allCategories = await Category.find({}, { categoryName: 1, _id: 0 });
-    const categoryViewsMap = new Map();
-
-    categoryViews.forEach((item) => {
-      categoryViewsMap.set(item.categoryName, item.views);
+    const { month, year, result } = await monthlyViewsByCategoryService({
+      monthParam,
+      yearParam,
     });
-
-    const result = allCategories.map((cat) => ({
-      categoryName: cat.categoryName,
-      views: categoryViewsMap.get(cat.categoryName) || 0,
-    }));
-
-    result.sort((a, b) => b.views - a.views);
-
     return res.status(200).json({
       success: true,
       message: "Monthly views by category retrieved successfully",
       data: { month, year, categories: result },
     });
   } catch (error) {
-    console.error("Error fetching monthly category views:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: error.message || "Internal Server Error",
     });
   }
 };

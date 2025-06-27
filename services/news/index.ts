@@ -149,6 +149,135 @@ const trackNewsViewService = async (newsId: string) => {
   return { news, currentMonthViews };
 };
 
+const getAllDashboardDataService = async () => {
+  // Get total views across all news articles
+  const totalViewsResult = await News.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalViews: { $sum: "$views" }, // Sum all views from all news
+        totalArticles: { $sum: 1 }, // Count all articles
+        uniqueAuthors: { $addToSet: "$createdBy" }, // Collect unique authors
+      },
+    },
+  ]);
+
+  // Get unpublished articles
+  const unpublishedArticles = await News.find(
+    { publish: false },
+    { newsTitle: 1, createdAt: 1, createdBy: 1, _id: 1 }
+  );
+
+  return { totalViewsResult, unpublishedArticles };
+};
+
+const topPerformingNewsService = async () => {
+  const topNews = await News.find().sort({ views: -1 }).limit(10); // Sort descending by views
+  const topResult = topNews.filter((news) => news.views > 10); // Only return items with views > 10
+
+  return { topResult };
+};
+const monthlyViewsService = async () => {
+  const monthlyViews = await News.aggregate([
+    {
+      $group: {
+        _id: {
+          month: { $month: "$createdAt" },
+          year: { $year: "$createdAt" },
+        },
+        totalViews: { $sum: "$views" },
+      },
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1 } }, // Sort by year and month
+  ]);
+
+  // Array of all month names
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  // Get all unique years from the aggregated data
+  const years = [...new Set(monthlyViews.map((entry) => entry._id.year))];
+
+  // Initialize result with all 12 months and set views to 0 by default
+  const result = years.map((year) => {
+    const monthsData = monthNames.map((month, index) => {
+      // Find the matching month in the aggregated data
+      const existingMonth = monthlyViews.find(
+        (entry) => entry._id.year === year && entry._id.month === index + 1
+      );
+
+      return {
+        month,
+        year,
+        totalViews: existingMonth ? existingMonth.totalViews : 0, // Default to 0 if not found
+      };
+    });
+
+    return { year, months: monthsData };
+  });
+
+  return { result };
+};
+
+const monthlyViewsByCategoryService = async ({ monthParam, yearParam }) => {
+  // Get month and year from query params or use current month/year
+  const today = new Date();
+  const month = parseInt(monthParam as string) || today.getMonth() + 1;
+  const year = parseInt(yearParam as string) || today.getFullYear();
+
+  // Aggregate news views by category for the specified month
+  const categoryViews = await News.aggregate([
+    {
+      $match: {
+        [`monthlyViews.${year}.${month}`]: { $exists: true, $gt: 0 },
+      },
+    },
+    {
+      $group: {
+        _id: "$category",
+        totalViews: { $sum: `$monthlyViews.${year}.${month}` },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        categoryName: "$_id",
+        views: "$totalViews",
+      },
+    },
+    { $sort: { views: -1 } },
+  ]);
+
+  // Get all categories to ensure we include ones with zero views
+  const allCategories = await Category.find({}, { categoryName: 1, _id: 0 });
+  const categoryViewsMap = new Map();
+
+  categoryViews.forEach((item) => {
+    categoryViewsMap.set(item.categoryName, item.views);
+  });
+
+  const result = allCategories.map((cat) => ({
+    categoryName: cat.categoryName,
+    views: categoryViewsMap.get(cat.categoryName) || 0,
+  }));
+
+  result.sort((a, b) => b.views - a.views);
+
+  return { month, year, result };
+};
+
 export {
   createNewsService,
   publishNewsService,
@@ -160,4 +289,8 @@ export {
   updateNewsService,
   deleteNewsService,
   trackNewsViewService,
+  getAllDashboardDataService,
+  topPerformingNewsService,
+  monthlyViewsService,
+  monthlyViewsByCategoryService,
 };
