@@ -20,6 +20,7 @@ import {
   forgotpasswordValidatorMiddleware,
 } from "../middlewares/auth";
 import { authorizeRoles } from "../middlewares/roleBasedPermission";
+import { resetPasswordRateLimitter } from "../middlewares/rate-limiter/authRateLimiter";
 
 const userRouter = Router();
 
@@ -29,10 +30,12 @@ userRouter.post(
   "/change-password",
   authenticateUser,
   changePasswordValidatorMiddleware,
+  resetPasswordRateLimitter,
   changePassword
 );
 userRouter.post(
   "/reset-password",
+  resetPasswordRateLimitter,
   forgotpasswordValidatorMiddleware,
   forgotPassword
 );
