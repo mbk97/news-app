@@ -1,13 +1,5 @@
 import Joi from "joi";
 
-export const validate = <T>(schema: Joi.ObjectSchema, data: T) => {
-  const { error } = schema.validate(data, { abortEarly: false });
-  if (error) {
-    return error.details[0].message;
-  }
-  return null;
-};
-
 export const userRegistrationSchema = Joi.object({
   fullname: Joi.string().min(3).max(50).required().messages({
     "string.empty": "Fullname is required",
@@ -18,43 +10,37 @@ export const userRegistrationSchema = Joi.object({
     "string.email": "Please enter a valid email address",
     "string.empty": "Email is required",
   }),
-  password: Joi.string()
-    .min(8)
-    .regex(/(?=.*[a-z])/, "lowercase")
-    .regex(/(?=.*[A-Z])/, "uppercase")
-    .regex(/(?=.*[0-9])/, "number")
-    .regex(/(?=.*[!@#$%^&*(),.?":{}|<>])/, "special character")
-    .required()
-    .messages({
-      "string.empty": "Password is required",
-      "string.min": "Password must be at least 8 characters long",
-      "string.pattern.base":
-        "Password must include at least one lowercase letter, one uppercase letter, one number, and one special character",
-    }),
-  role: Joi.string().valid("admin", "user").required().messages({
-    "any.only": "Role must be either 'admin' or 'user'",
+  roleName: Joi.string().required().messages({
+    "string.empty": "Role name is required",
+    "any.required": "Role name is required",
   }),
 });
 
-// Schema for user login validation
 export const userLoginSchema = Joi.object({
   email: Joi.string().email().required().messages({
     "string.email": "Please enter a valid email address",
     "string.empty": "Email is required",
   }),
-  password: Joi.string()
-    .min(8)
-    .regex(/(?=.*[a-z])/, "lowercase")
-    .regex(/(?=.*[A-Z])/, "uppercase")
-    .regex(/(?=.*[0-9])/, "number")
-    .regex(/(?=.*[!@#$%^&*(),.?":{}|<>])/, "special character")
-    .required()
-    .messages({
-      "string.empty": "Password is required",
-      "string.min": "Password must be at least 8 characters long",
-      "string.pattern.base":
-        "Password must include at least one lowercase letter, one uppercase letter, one number, and one special character",
-    }),
+  password: Joi.string().min(8),
+});
+
+export const changePasswordSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please enter a valid email address",
+    "string.empty": "Email is required",
+  }),
+  currentPassword: Joi.string().min(8).message("Current password is required"),
+  newPassword: Joi.string().min(8).message("New password is required"),
+});
+export const passwordSchema = Joi.object({
+  password: Joi.string().min(8).message("Password is required"),
+});
+
+export const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please enter a valid email address",
+    "string.empty": "Email is required",
+  }),
 });
 
 export const createNewsSchema = Joi.object({

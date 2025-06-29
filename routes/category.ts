@@ -4,8 +4,9 @@ import {
   deleteCategory,
   getAllCategory,
 } from "../controller/category";
-import { authenticateUser } from "../middlewares/auth";
-import { authorizeRoles } from "../middlewares/roles";
+import { authenticateUser } from "../middlewares/authenticator";
+import { authorizeRoles } from "../middlewares/roleBasedPermission";
+import { createCategoryValidatorMiddleware } from "../middlewares/category";
 
 const categoryRouter = Router();
 
@@ -14,6 +15,7 @@ const categoryRouter = Router();
 categoryRouter.post(
   "/",
   authenticateUser,
+  createCategoryValidatorMiddleware,
   authorizeRoles("Admin"),
   createCategory
 );

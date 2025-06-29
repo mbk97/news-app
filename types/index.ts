@@ -29,3 +29,12 @@ export interface ICategory {
 export interface IRoles {
   roleName: string;
 }
+
+export interface ICreateNews {
+  newsTitle: string;
+  newsBody: string;
+  createdBy: string;
+  newsImage: string;
+  category: string;
+  subHeadline?: string;
+}

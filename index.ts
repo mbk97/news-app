@@ -28,9 +28,9 @@ app.use(
     credentials: true, // Allow cookies and authorization headers
   })
 );
-app.use("/news-app-auth", userRouter);
-app.use("/news-app", newsRouter);
-app.use("/news-app-category", categoryRouter);
-app.use("/news-app-roles", roleRouter);
+app.use("/v2/news-app-auth", userRouter);
+app.use("/v2/news-app", newsRouter);
+app.use("/v2/news-app-category", categoryRouter);
+app.use("/v2/news-app-roles", roleRouter);
 
 app.listen(PORT, () => console.log(`server is running on Port: ${PORT}`));
