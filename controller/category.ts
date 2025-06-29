@@ -5,10 +5,25 @@ import {
   deleteCategoryService,
   getAllCategoryService,
 } from "../services/category";
+import { getCache, setCache } from "../services/cache";
 
 export const getAllCategory = async (req: Request, res: Response) => {
   try {
+    // Check if categories are cached
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cachedCategories = await getCache<{ categories: any[] }>(
+      "categories:all"
+    );
+    console.log(cachedCategories, "CACHED CATEGORIES");
+    if (cachedCategories) {
+      return res.status(200).json({
+        success: true,
+        data: cachedCategories.categories,
+      });
+    }
+
     const { categories } = await getAllCategoryService();
+
     res.status(200).json({
       success: true,
       data: categories,
@@ -27,6 +42,22 @@ export const createCategory = async (req: Request, res: Response) => {
 
   try {
     const { newCategory } = await createCategoryService(categoryName);
+
+    // Try to merge new category into existing cache
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cached = await getCache<{ categories: any[] }>("categories:all");
+
+    console.log(cached, "CACHED CATEGORY");
+
+    if (cached?.categories) {
+      const updatedCategories = [newCategory, ...cached.categories];
+      await setCache("categories:all", { categories: updatedCategories });
+    } else {
+      // If no cache exists yet, initialize it
+      await setCache("categories:all", { categories: [newCategory] });
+    }
+
     // Log category creation
     await logActivity(
       req.body.userId || "system", // You might need to add userId to the request
