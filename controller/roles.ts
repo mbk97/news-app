@@ -5,6 +5,7 @@ import {
   getAllRolesService,
   getAllUserUnderRoleService,
 } from "../services/roles";
+import { customErrorHandler } from "../utils/apiError";
 
 const createRole = async (req: Request, res: Response) => {
   const { roleName } = req.body;
@@ -16,8 +17,10 @@ const createRole = async (req: Request, res: Response) => {
       role: newRole,
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message || "Internal server error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -39,18 +42,16 @@ const getAllRoles = async (req: Request, res: Response) => {
       data: roles,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message:
-        error.message || "Failed to fetch categories. Please try again later.",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
 
 const getAllUsersUnderAParticularRole = async (req: Request, res: Response) => {
   const { roleName } = req.params;
-
-  console.log(roleName);
 
   const { usersUnderRole } = await getAllUserUnderRoleService(roleName);
   res.status(200).json({
