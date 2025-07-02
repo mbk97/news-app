@@ -25,7 +25,7 @@ const createNews = async (req: Request, res: Response) => {
     const { freshNews } = await createNewsService(req.body);
     await Promise.all([
       logActivity(
-        req.body.createdBy,
+        req.user.id.toString() || "system", // Use req.user.id if available, otherwise default to "system"
         "CREATE_NEWS",
         `News article "${newsTitle}" was created`,
         req,

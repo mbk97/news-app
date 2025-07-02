@@ -11,7 +11,6 @@ export const authenticateUser = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("Authenticating user...", process.env.JWT_SECRET);
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
 
