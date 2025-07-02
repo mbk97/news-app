@@ -6,6 +6,7 @@ import { newsRouter } from "./routes/news";
 import { categoryRouter } from "./routes/category";
 import { roleRouter } from "./routes/role";
 import cors from "cors";
+import { errorHandler } from "./middlewares/error/errorHandler";
 
 dotenv.config();
 connectDB();
@@ -28,9 +29,21 @@ app.use(
     credentials: true, // Allow cookies and authorization headers
   })
 );
-app.use("/v2/news-app-auth", userRouter);
-app.use("/v2/news-app", newsRouter);
-app.use("/v2/news-app-category", categoryRouter);
-app.use("/v2/news-app-roles", roleRouter);
+app.use("/news-app-auth", userRouter);
+app.use("/news-app", newsRouter);
+app.use("/news-app-category", categoryRouter);
+app.use("/news-app-roles", roleRouter);
 
-app.listen(PORT, () => console.log(`server is running on Port: ${PORT}`));
+app.use(errorHandler);
+
+(async () => {
+  try {
+    await connectDB(); // Don't proceed until DB connects
+    app.listen(PORT, () => {
+      console.log(`✅ Server is running on Port: ${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to start server", err);
+    process.exit(1);
+  }
+})();

@@ -1,10 +1,11 @@
 import Roles from "../../model/roles";
 import Users from "../../model/userModel";
+import { ApiError } from "../../utils/apiError";
 
 const createRoleService = async (roleName: string) => {
   const existingRole = await Roles.findOne({ roleName });
 
-  if (existingRole) throw new Error("Role already exists");
+  if (existingRole) throw new ApiError(400, "Role already exists");
 
   const newRole = await Roles.create({
     roleName,

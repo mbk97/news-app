@@ -17,6 +17,7 @@ import {
   updateNewsService,
 } from "../services/news";
 import { sendCreateNewsEmail } from "../services/email";
+import { customErrorHandler } from "../utils/apiError";
 
 const createNews = async (req: Request, res: Response) => {
   const { newsTitle, createdBy } = req.body;
@@ -41,9 +42,10 @@ const createNews = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -63,9 +65,11 @@ const publishNews = async (req: Request, res: Response) => {
     );
     return res.status(200).json({ message: "News is published successfully" });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: error.message || "Internal Server Error" });
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
+    });
   }
 };
 
@@ -99,9 +103,10 @@ const getAllNews = async (req: Request, res: Response) => {
       data: news,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -115,9 +120,10 @@ const getRecentNews = async (req: Request, res: Response) => {
       data: recentNews,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Error retrieving news",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -141,9 +147,10 @@ const getAllPublishedNews = async (req: Request, res: Response) => {
       data: publishedNews,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -168,9 +175,10 @@ const getNewById = async (req: Request, res: Response) => {
       message: "Successful",
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -196,9 +204,10 @@ const updateNews = async (req: Request, res: Response) => {
       data,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -221,9 +230,10 @@ const deleteNews = async (req: Request, res: Response) => {
       message: "News deleted successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Server error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -239,9 +249,10 @@ const trackNewsView = async (req: Request, res: Response) => {
       currentMonthViews,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Error tracking view",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -269,9 +280,10 @@ const getAllDashboardData = async (req: Request, res: Response) => {
       data: responseData,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Error retrieving news statistics",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -284,9 +296,10 @@ const getTopPerformingNewsBasedOnViews = async (
     const { topResult } = await topPerformingNewsService();
     return res.status(200).json({ success: true, data: topResult });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -296,9 +309,10 @@ const getMonthlyViews = async (req: Request, res: Response) => {
     const { result } = await monthlyViewsService();
     return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -318,9 +332,10 @@ const getMonthlyViewsByCategory = async (req: Request, res: Response) => {
       data: { month, year, categories: result },
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };

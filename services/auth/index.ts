@@ -4,6 +4,7 @@ import User from "../../model/userModel";
 import crypto from "crypto";
 import { generateToken } from "../../utils";
 import ActivityLog from "../../model/activityLogModel";
+import { ApiError } from "../../utils/apiError";
 
 const createUserService = async ({ fullname, email, roleName }) => {
   const userEmail = email.toLowerCase();
@@ -17,7 +18,7 @@ const createUserService = async ({ fullname, email, roleName }) => {
     email: userEmail,
   });
 
-  if (mailExists) throw new Error("User already exist");
+  if (mailExists) throw new ApiError(400, "User already exist");
 
   const defaultPassword = crypto.randomBytes(8).toString("hex");
   const salt = await genSalt(10);
@@ -35,10 +36,10 @@ const createUserService = async ({ fullname, email, roleName }) => {
 
 const loginUserService = async ({ email, password }) => {
   const user = await User.findOne({ email: email.toLowerCase() });
-  if (!user || !user.userStatus) throw new Error("Invalid email or password");
+  if (!user || !user.userStatus) throw new ApiError(400, "Invalid credentials");
 
   const isMatch = await compare(password, user.password);
-  if (!isMatch) throw new Error("Invalid email or password");
+  if (!isMatch) throw new ApiError(400, "Invalid email or password");
 
   const token = generateToken(user._id.toString());
 
@@ -54,10 +55,10 @@ const changePasswordService = async ({
     email: email.toLowerCase(),
   });
 
-  if (!user) throw new Error("User not found!");
+  if (!user) throw new ApiError(400, "User not found!");
 
   const isMatch = await compare(currentPassword, user.password);
-  if (!isMatch) throw new Error("Current password is incorrect.");
+  if (!isMatch) throw new ApiError(400, "Current password is incorrect.");
 
   // Hash new password
   const salt = await genSalt(10);
@@ -92,7 +93,7 @@ const resetPasswordService = async ({
     }
   }
 
-  if (!matchedUser) throw new Error("Invalid or expired token");
+  if (!matchedUser) throw new ApiError(400, "Invalid or expired token");
 
   // Hash the new password
   const salt = await genSalt(10);
@@ -114,7 +115,7 @@ const forgotPasswordService = async ({ email }: { email: string }) => {
     email: email.toLowerCase(),
   });
 
-  if (!user) throw new Error("User does not exist");
+  if (!user) throw new ApiError(400, "User does not exist");
   // Generate a secure reset token
   const resetToken = crypto.randomBytes(32).toString("hex");
   const salt = await genSalt(10);
@@ -134,7 +135,7 @@ const modifyUserStatusService = async (userId: string) => {
     "-password -createdAt -passwordResetExpires -passwordResetToken"
   );
 
-  if (!user) throw new Error("User does not exist");
+  if (!user) throw new ApiError(400, "User does not exist");
   // Toggle userStatus
   user.userStatus = !user.userStatus;
   await user.save();
@@ -175,12 +176,13 @@ const editUserService = async ({
   fullname: string;
   roleName: string;
 }) => {
-  if (!fullname && !roleName) throw new Error("At least one field is required");
+  if (!fullname && !roleName)
+    throw new ApiError(400, "At least one field is required");
 
   // Check if role exists if roleName is provided
   if (roleName) {
     const checkUserRole = await Roles.findOne({ roleName });
-    if (!checkUserRole) throw new Error("Role does not exist");
+    if (!checkUserRole) throw new ApiError(400, "Role does not exist");
   }
 
   const updatedUser = await User.findByIdAndUpdate(
@@ -191,7 +193,7 @@ const editUserService = async ({
     { new: true }
   ).select("-password -passwordResetToken -passwordResetExpires");
 
-  if (!updatedUser) throw new Error("User does not exist");
+  if (!updatedUser) throw new ApiError(400, "User does not exist");
 
   return { updatedUser };
 };
@@ -254,11 +256,11 @@ const auditLogService = async ({
 };
 
 const logoutService = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required");
+  if (!userId) throw new ApiError(400, "User ID is required");
 
   const user = await User.findById(userId);
 
-  if (!user) throw new Error("User not found");
+  if (!user) throw new ApiError(400, "User not found");
 
   return { user };
 };

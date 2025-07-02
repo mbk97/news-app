@@ -19,11 +19,11 @@ const sendResetPasswordEmail = async ({ user, resetUrl }) => {
   const subject = "Password Reset Request";
   const text = ``;
   const html = `
-    <p>Hello ${user.fullname},</p>
+    <p>Hello ${user.fullname},</p> <br />
     <p>You requested to reset your password. Please click the link below to set a new password:</p>
-    <a href="${resetUrl}">Reset Password</a>
-    <p>This link will expire in 1 hour.</p>
-    <p>If you did not request this, please ignore this email.</p>
+    <a href="${resetUrl}">Reset Password</a> <br />
+    <p>This link will expire in 1 hour.</p> <br />
+    <p>If you did not request this, please ignore this email.</p>  <br />
     <p>Best regards,<br>Your Team</p>
   `;
 
@@ -33,16 +33,14 @@ const sendCreateNewsEmail = async ({ newsTitle, createdBy }) => {
   const subject = "A New News Article Has Been Created";
   const text = ``;
   const html = `<html>
-       <h2>Hello Admin</h2>
-       A new news article titled "${newsTitle}" has been created by ${createdBy}. <br />
+       <h5>Dear Abimbola Mubarak,</h5>
+       A new article titled "${newsTitle}" has been created by ${createdBy}. <br />
        Please review it at your earliest convenience. <br />
        <br />
        Best regards, <br />
        Naija Daily.
       </html>`;
-  sendEmail("oyindamola850@gmail.com", subject, text, html);
-
-  await sendEmail("oyindamola850@gmail.com", subject, text, html);
+  await sendEmail("naijadailyad@gmail.com", subject, text, html);
 };
 
 export { sendWelcome, sendResetPasswordEmail, sendCreateNewsEmail };

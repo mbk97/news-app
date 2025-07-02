@@ -1,6 +1,7 @@
 import Category from "../../model/categoryModel";
 import News from "../../model/newsModel";
 import { ICreateNews } from "../../types";
+import { ApiError } from "../../utils/apiError";
 
 const createNewsService = async ({
   newsTitle,
@@ -14,7 +15,8 @@ const createNewsService = async ({
     categoryName: { $regex: `^${category}$`, $options: "i" },
   });
 
-  if (!checkIfCategoryIsCorrect) throw new Error("Category does not exist");
+  if (!checkIfCategoryIsCorrect)
+    throw new ApiError(400, "Category does not exist");
 
   const freshNews = await News.create({
     newsTitle,
@@ -32,7 +34,7 @@ const createNewsService = async ({
 const publishNewsService = async (newsId: string) => {
   const news = await News.findById(newsId);
   if (!news) throw new Error("News not found!");
-  if (news.publish) throw new Error("News is already published");
+  if (news.publish) throw new ApiError(400, "News is already published");
   news.publish = true;
   await news.save(); // Ensure save is awaited
 
@@ -98,13 +100,13 @@ const getTotalNewsService = async () => {
 };
 const getNewsByIdService = async (id: string) => {
   const news = await News.findById(id);
-  if (!news) throw new Error("News not found");
+  if (!news) throw new ApiError(400, "News not found");
   return { news };
 };
 
 const updateNewsService = async ({ id, body }) => {
   const newsToBeUpdated = await News.findById(id);
-  if (!newsToBeUpdated) throw new Error("News not found");
+  if (!newsToBeUpdated) throw new ApiError(400, "News not found");
 
   const data = await News.findByIdAndUpdate(id, body, {
     new: true,
@@ -115,7 +117,7 @@ const updateNewsService = async ({ id, body }) => {
 
 const deleteNewsService = async (id: string) => {
   const news = await News.findById(id);
-  if (!news) throw new Error("News not found");
+  if (!news) throw new ApiError(400, "News not found");
   await news.remove();
 
   return { news };
@@ -140,7 +142,7 @@ const trackNewsViewService = async (newsId: string) => {
     { new: true }
   );
 
-  if (!news) throw new Error("News not found");
+  if (!news) throw new ApiError(400, "News not found");
 
   // Get the current month's views
   const currentMonthViews =

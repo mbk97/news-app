@@ -5,8 +5,10 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: "oyindamola850@gmail.com", // Your email address
-    pass: "fzsz mbxr lhcm dcef", // Your email password
+    user: "naijadailyad@gmail.com", // Your email address
+    pass: "qpqw thnm hvat hgsd", // Your email password
+    // user: "oyindamola850@gmail.com", // Your email address
+    // pass: "fzsz mbxr lhcm dcef", // Your email password
   },
   tls: {
     ciphers: "SSLv3",
@@ -20,7 +22,7 @@ const sendEmail = async (
   html: string
 ) => {
   const mailOptions = {
-    from: "oyindamola850@gmail.com",
+    from: "naijadailyad@gmail.com",
     to,
     subject,
     text,
@@ -33,8 +35,6 @@ const sendEmail = async (
   } catch (error) {
     console.error("Error sending email:", error);
   }
-
-  return transporter.sendMail(mailOptions);
 };
 
 export { sendEmail };

@@ -15,6 +15,7 @@ import {
   resetPasswordService,
 } from "../services/auth";
 import { sendResetPasswordEmail, sendWelcome } from "../services/email";
+import { customErrorHandler } from "../utils/apiError";
 
 const registerUser = async (req: Request, res: Response) => {
   const { fullname, email, roleName } = req.body;
@@ -45,9 +46,10 @@ const registerUser = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message || "Server error",
-      success: false,
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -81,9 +83,10 @@ const loginUser = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message || "Server error",
-      success: false,
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -139,9 +142,10 @@ const resetPassword = async (req: Request, res: Response) => {
       message: "Password has been reset successfully",
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Server error. Please try again later.",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -170,9 +174,10 @@ const forgotPassword = async (req: Request, res: Response) => {
       message: "Password reset email sent. Please check your inbox.",
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Server error. Please try again later.",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -197,9 +202,10 @@ const modifyUserStatus = async (req: Request, res: Response) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Server error. Please try again later.",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -214,10 +220,10 @@ const getAllUsers = async (req: Request, res: Response) => {
       data: users,
     });
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error. Please try again later.",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -249,9 +255,10 @@ const editUser = async (req: Request, res: Response) => {
       data: updatedUser,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Server error. Please try again later.",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -287,9 +294,10 @@ const userActivityLog = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Server error. Please try again later.",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
@@ -313,10 +321,10 @@ const logoutUser = async (req: Request, res: Response) => {
       message: "Logged out successfully",
     });
   } catch (error) {
-    console.error("Error logging out:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Server error. Please try again later.",
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
     });
   }
 };
