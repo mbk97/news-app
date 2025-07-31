@@ -29,7 +29,7 @@ const NewsModel = new Schema<INews>(
       required: true,
     },
     headline: {
-      type: Boolean,
+      type: String,
       required: false,
     },
     views: {

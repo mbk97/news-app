@@ -17,7 +17,7 @@ export interface INews {
   category: string;
   publish: boolean;
   subHeadline?: string;
-  headline?: boolean;
+  headline?: string;
   views: number;
   viewDates?: Date[];
   monthlyViews?: Record<number, Record<number, number>>; // { year: { month: count } }
