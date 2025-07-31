@@ -3,7 +3,7 @@
   "builds": [
     {
       "src": "index.ts",
-      "use": "@vercel/node"
+      "use": "@now/node"
     }
   ],
   "routes": [
@@ -11,13 +11,5 @@
       "src": "/(.*)",
       "dest": "index.ts"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "index.ts": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
