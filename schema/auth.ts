@@ -64,6 +64,9 @@ export const createNewsSchema = Joi.object({
   subHeadline: Joi.string().optional().allow("").messages({
     "string.empty": "Subheadline can be empty",
   }),
+  headline: Joi.boolean().optional().allow("").messages({
+    "string.empty": "headline can be empty",
+  }),
   publish: Joi.boolean().required().messages({
     "string.empty": "Published status is required",
   }),

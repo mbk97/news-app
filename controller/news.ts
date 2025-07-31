@@ -6,6 +6,7 @@ import {
   getAllDashboardDataService,
   getAllNewsService,
   getAllPublishedNewsService,
+  getHeadLineNewsServce,
   getNewsByIdService,
   getRecentNewsService,
   getTotalNewsService,
@@ -118,6 +119,22 @@ const getRecentNews = async (req: Request, res: Response) => {
       success: true,
       message: "Successfully retrieved recent news",
       data: recentNews,
+    });
+  } catch (error) {
+    const { message, statusCode, success } = customErrorHandler(error);
+    res.status(statusCode).json({
+      success: success,
+      message,
+    });
+  }
+};
+const getAllHeadlineNews = async (req: Request, res: Response) => {
+  try {
+    const { headLineNews } = await getHeadLineNewsServce();
+    res.status(200).json({
+      success: true,
+      message: "Successfully retrieved headline news",
+      data: headLineNews,
     });
   } catch (error) {
     const { message, statusCode, success } = customErrorHandler(error);
@@ -351,6 +368,7 @@ export {
   getNewById,
   deleteNews,
   trackNewsView,
+  getAllHeadlineNews,
   getAllDashboardData,
   getTopPerformingNewsBasedOnViews,
   getMonthlyViews,

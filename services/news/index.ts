@@ -10,6 +10,7 @@ const createNewsService = async ({
   createdBy,
   category,
   subHeadline,
+  headline,
 }: ICreateNews) => {
   const checkIfCategoryIsCorrect = await Category.findOne({
     categoryName: { $regex: `^${category}$`, $options: "i" },
@@ -25,6 +26,7 @@ const createNewsService = async ({
     createdBy,
     category,
     subHeadline,
+    headline,
     publish: false,
   });
 
@@ -75,6 +77,11 @@ const getAllNewsService = async ({
 const getRecentNewsService = async () => {
   const recentNews = await News.find().sort({ createdAt: -1 }).limit(10);
   return { recentNews };
+};
+
+const getHeadLineNewsServce = async () => {
+  const headLineNews = await News.find({ headline: true }).limit(10);
+  return { headLineNews };
 };
 
 const getAllPublishedNewsService = async ({ page, limit, category }) => {
@@ -295,4 +302,5 @@ export {
   topPerformingNewsService,
   monthlyViewsService,
   monthlyViewsByCategoryService,
+  getHeadLineNewsServce,
 };
