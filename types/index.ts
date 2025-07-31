@@ -17,6 +17,7 @@ export interface INews {
   category: string;
   publish: boolean;
   subHeadline?: string;
+  headline?: boolean;
   views: number;
   viewDates?: Date[];
   monthlyViews?: Record<number, Record<number, number>>; // { year: { month: count } }
@@ -37,4 +38,5 @@ export interface ICreateNews {
   newsImage: string;
   category: string;
   subHeadline?: string;
+  headline?: boolean;
 }

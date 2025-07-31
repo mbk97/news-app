@@ -14,6 +14,7 @@ import {
   publishNews,
   trackNewsView,
   updateNews,
+  getAllHeadlineNews,
 } from "../controller/news";
 import { authenticateUser } from "../middlewares/authenticator";
 import { authorizeRoles } from "../middlewares/roleBasedPermission";
@@ -66,6 +67,7 @@ newsRouter.put(
 
 // client side routes
 newsRouter.get("/published", getAllPublishedNews);
+newsRouter.get("/headlines", getAllHeadlineNews);
 newsRouter.get("/:id", getNewById);
 newsRouter.post("/news-view/:newsId", trackNewsView);
 
