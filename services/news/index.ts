@@ -80,7 +80,10 @@ const getRecentNewsService = async () => {
 };
 
 const getHeadLineNewsServce = async () => {
-  const headLineNews = await News.find({ headline: true }).limit(10);
+  const headLineNews = await News.find({
+    headline: true,
+    pushlish: true,
+  }).limit(10);
   return { headLineNews };
 };
 
