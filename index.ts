@@ -9,7 +9,7 @@ import cors from "cors";
 import { errorHandler } from "./middlewares/error/errorHandler";
 
 dotenv.config();
-connectDB();
+// connectDB();
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;

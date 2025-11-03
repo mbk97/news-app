@@ -26,7 +26,7 @@ const newsRouter = Router();
 newsRouter.put(
   "/publish/:id",
   authenticateUser,
-  authorizeRoles("Admin"),
+  authorizeRoles("Admin", "NaijaDaily"),
   publishNews
 );
 newsRouter.delete(
@@ -39,7 +39,7 @@ newsRouter.post(
   "/create",
   authenticateUser,
   createNewsValidatorMiddleware,
-  authorizeRoles("Admin", "Editor", "Writer"),
+  authorizeRoles("Admin", "Editor", "Writer", "NaijaDaily"),
   createNews
 );
 newsRouter.get("/", authenticateUser, getAllNews);
