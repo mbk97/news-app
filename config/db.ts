@@ -22,19 +22,46 @@
 
 import mongoose from "mongoose";
 
-let isConnected = false;
+// let isConnected = false;
 
-export const connectDB = async () => {
-  if (isConnected) return;
+// export const connectDB = async () => {
+//   if (isConnected) return;
+
+//   const connectionString =
+//     process.env.NODE_ENV === "development"
+//       ? process.env.MONGO_DB_URI_TEST
+//       : process.env.MONGO_DB_URI;
+
+//   const conn = await mongoose.connect(connectionString);
+//   // isConnected = conn.connections[0].readyState;
+//   isConnected = conn.connections[0].readyState === 1;
+
+//   console.log("✅ MongoDB connected");
+// };
+
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+export async function connectDB() {
+  if (cached.conn) return cached.conn;
 
   const connectionString =
     process.env.NODE_ENV === "development"
       ? process.env.MONGO_DB_URI_TEST
       : process.env.MONGO_DB_URI;
 
-  const conn = await mongoose.connect(connectionString);
-  // isConnected = conn.connections[0].readyState;
-  isConnected = conn.connections[0].readyState === 1;
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(connectionString, {
+        maxPoolSize: 10, // optional: avoids too many idle pools
+      })
+      .then((mongoose) => mongoose);
+  }
 
+  cached.conn = await cached.promise;
   console.log("✅ MongoDB connected");
-};
+  return cached.conn;
+}
