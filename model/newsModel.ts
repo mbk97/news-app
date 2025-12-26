@@ -55,4 +55,10 @@ const NewsModel = new Schema<INews>(
   }
 );
 
+// Fast lookup for published news sorted by newest
+NewsModel.index({ publish: 1, createdAt: -1 });
+
+// Fast lookup when filtering by category
+NewsModel.index({ category: 1, publish: 1, createdAt: -1 });
+
 export default model<INews>("News", NewsModel);

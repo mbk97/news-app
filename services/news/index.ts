@@ -67,6 +67,7 @@ const getAllNewsService = async ({
   const skip = (Number(pageNo) - 1) * Number(pageSize);
   const total = await News.countDocuments(filter);
   const news = await News.find(filter)
+    .lean()
     .skip(skip)
     .limit(Number(pageSize))
     .sort({ createdAt: -1 });
@@ -75,15 +76,17 @@ const getAllNewsService = async ({
 };
 
 const getRecentNewsService = async () => {
-  const recentNews = await News.find().sort({ createdAt: -1 }).limit(10);
+  const recentNews = await News.find().sort({ createdAt: -1 }).limit(10).lean();
   return { recentNews };
 };
 
 const getHeadLineNewsServce = async () => {
   const headLineNews = await News.find({
     headline: true,
-    pushlish: true,
-  }).limit(10);
+    publish: true,
+  })
+    .limit(10)
+    .lean();
   return { headLineNews };
 };
 
@@ -95,6 +98,7 @@ const getAllPublishedNewsService = async ({ page, limit, category }) => {
   const skip = (Number(page) - 1) * Number(limit);
   const total = await News.countDocuments(filter);
   const publishedNews = await News.find(filter)
+    .lean()
     .skip(skip)
     .limit(Number(limit))
     .sort({ createdAt: -1 }); // optional sorting by newest first
@@ -103,9 +107,8 @@ const getAllPublishedNewsService = async ({ page, limit, category }) => {
 };
 
 const getTotalNewsService = async () => {
-  const news = await News.find();
-  const totalNews = news.length;
-
+  const totalNews = await News.countDocuments();
+  return { totalNews };
   return { totalNews };
 };
 const getNewsByIdService = async (id: string) => {
@@ -115,7 +118,7 @@ const getNewsByIdService = async (id: string) => {
 };
 
 const updateNewsService = async ({ id, body }) => {
-  const newsToBeUpdated = await News.findById(id);
+  const newsToBeUpdated = await News.findById(id).lean();
   if (!newsToBeUpdated) throw new ApiError(400, "News not found");
 
   const data = await News.findByIdAndUpdate(id, body, {
@@ -150,7 +153,7 @@ const trackNewsViewService = async (newsId: string) => {
       $push: { viewDates: currentDate }, // Add timestamp to viewDates array
     },
     { new: true }
-  );
+  ).lean();
 
   if (!news) throw new ApiError(400, "News not found");
 
@@ -178,13 +181,13 @@ const getAllDashboardDataService = async () => {
   const unpublishedArticles = await News.find(
     { publish: false },
     { newsTitle: 1, createdAt: 1, createdBy: 1, _id: 1 }
-  );
+  ).lean();
 
   return { totalViewsResult, unpublishedArticles };
 };
 
 const topPerformingNewsService = async () => {
-  const topNews = await News.find().sort({ views: -1 }).limit(10); // Sort descending by views
+  const topNews = await News.find().sort({ views: -1 }).limit(10).lean(); // Sort descending by views
   const topResult = topNews.filter((news) => news.views > 10); // Only return items with views > 10
 
   return { topResult };

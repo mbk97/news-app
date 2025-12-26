@@ -72,4 +72,7 @@ const activityLogSchema = new Schema<IActivityLog>(
   }
 );
 
+activityLogSchema.index({ userId: 1, timestamp: -1 });
+activityLogSchema.index({ action: 1, timestamp: -1 });
+
 export default model<IActivityLog>("ActivityLog", activityLogSchema);
