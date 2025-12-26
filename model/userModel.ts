@@ -1,7 +1,6 @@
 import { Schema, model } from "mongoose";
-import { IUser } from "../types";
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema(
   {
     fullname: {
       type: String,
@@ -24,8 +23,8 @@ const userSchema = new Schema<IUser>(
       default: true,
       required: true,
     },
-    passwordResetToken: { type: String },
-    passwordResetExpires: { type: Date },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
   },
   {
     timestamps: true,
@@ -33,4 +32,7 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-export default model<IUser>("User", userSchema);
+// ❌ NO <IUser> HERE
+const User = model("User", userSchema);
+
+export default User;

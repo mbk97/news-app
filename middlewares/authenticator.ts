@@ -28,7 +28,7 @@ export const authenticateUser = async (
     }
 
     req.user = {
-      id: user.id || user._id?.toString(),
+      id: typeof user.id === "number" ? user.id : Number(user._id),
       role: user.roleName,
       ...user.toObject?.(),
     };

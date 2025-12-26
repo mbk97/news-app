@@ -21,7 +21,7 @@ const createCategoryService = async (categoryName: string) => {
 const deleteCategoryService = async (categoryId: string) => {
   const category = await Category.findById(categoryId);
   if (!category) throw new ApiError(400, "Category not found");
-  await category.remove();
+  await category.deleteOne();
   return { category };
 };
 

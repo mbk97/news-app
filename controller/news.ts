@@ -30,7 +30,7 @@ const createNews = async (req: Request, res: Response) => {
         "CREATE_NEWS",
         `News article "${newsTitle}" was created`,
         req,
-        freshNews._id.toString(),
+        freshNews ? freshNews._id.toString() : "",
         "News"
       ),
       sendCreateNewsEmail({ newsTitle, createdBy }),

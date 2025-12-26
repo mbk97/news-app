@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import ActivityLog from "../model/activityLogModel";
 import { Request } from "express";
+import { Types } from "mongoose";
 
 export const logActivity = async (
   userId: string,
@@ -11,10 +13,12 @@ export const logActivity = async (
 ) => {
   try {
     await ActivityLog.create({
-      userId,
+      userId: new Types.ObjectId(userId), // ✅ fixed
       action,
       details,
-      resourceId,
+      resourceId: resourceId
+        ? new Types.ObjectId(resourceId) // ✅ convert if present
+        : undefined,
       resourceType,
       ipAddress: req?.ip,
       userAgent: req?.headers["user-agent"],

@@ -1,7 +1,16 @@
+import { Types } from "mongoose";
 import Category from "../../model/categoryModel";
 import News from "../../model/newsModel";
 import { ICreateNews } from "../../types";
 import { ApiError } from "../../utils/apiError";
+
+type CreateNewsResult = {
+  freshNews: {
+    _id: Types.ObjectId;
+    newsTitle: string;
+    createdBy: string;
+  };
+};
 
 const createNewsService = async ({
   newsTitle,
@@ -11,7 +20,7 @@ const createNewsService = async ({
   category,
   subHeadline,
   headline,
-}: ICreateNews) => {
+}: ICreateNews): Promise<CreateNewsResult> => {
   const checkIfCategoryIsCorrect = await Category.findOne({
     categoryName: { $regex: `^${category}$`, $options: "i" },
   });
@@ -26,7 +35,7 @@ const createNewsService = async ({
     createdBy,
     category,
     subHeadline,
-    headline,
+    headline: typeof headline === "boolean" ? String(headline) : headline,
     publish: false,
   });
 
@@ -82,7 +91,7 @@ const getRecentNewsService = async () => {
 
 const getHeadLineNewsServce = async () => {
   const headLineNews = await News.find({
-    headline: true,
+    headline: "true",
     publish: true,
   })
     .limit(10)
@@ -131,7 +140,7 @@ const updateNewsService = async ({ id, body }) => {
 const deleteNewsService = async (id: string) => {
   const news = await News.findById(id);
   if (!news) throw new ApiError(400, "News not found");
-  await news.remove();
+  await news.deleteOne();
 
   return { news };
 };

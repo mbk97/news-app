@@ -1,17 +1,6 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, InferSchemaType } from "mongoose";
 
-interface IActivityLog {
-  userId: Schema.Types.ObjectId;
-  action: string;
-  details: string;
-  resourceId?: Schema.Types.ObjectId;
-  resourceType?: string;
-  ipAddress?: string;
-  userAgent?: string;
-  timestamp: Date;
-}
-
-const activityLogSchema = new Schema<IActivityLog>(
+const activityLogSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -47,20 +36,10 @@ const activityLogSchema = new Schema<IActivityLog>(
     },
     resourceId: {
       type: Schema.Types.ObjectId,
-      required: false,
     },
-    resourceType: {
-      type: String,
-      required: false,
-    },
-    ipAddress: {
-      type: String,
-      required: false,
-    },
-    userAgent: {
-      type: String,
-      required: false,
-    },
+    resourceType: String,
+    ipAddress: String,
+    userAgent: String,
     timestamp: {
       type: Date,
       default: Date.now,
@@ -72,7 +51,13 @@ const activityLogSchema = new Schema<IActivityLog>(
   }
 );
 
+// Indexes
 activityLogSchema.index({ userId: 1, timestamp: -1 });
 activityLogSchema.index({ action: 1, timestamp: -1 });
 
-export default model<IActivityLog>("ActivityLog", activityLogSchema);
+// ✅ Let Mongoose infer the document type
+export type ActivityLogDoc = InferSchemaType<typeof activityLogSchema>;
+
+const ActivityLog = model<ActivityLogDoc>("ActivityLog", activityLogSchema);
+
+export default ActivityLog;

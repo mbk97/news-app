@@ -123,7 +123,7 @@ const forgotPasswordService = async ({ email }: { email: string }) => {
 
   // Save the hashed token and expiration time to the user record
   user.passwordResetToken = hashedResetToken;
-  user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // Token valid for 1 hour
+  user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // Token valid for 1 hour
   await user.save();
   // Send reset token via email
 
