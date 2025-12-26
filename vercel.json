@@ -11,10 +11,5 @@
       "src": "/(.*)",
       "dest": "index.ts"
     }
-  ],
-  "functions": {
-    "index.ts": {
-      "includeFiles": "node_modules/bson/**"
-    }
-  }
+  ]
 }
