@@ -64,6 +64,8 @@ import mongoose from "mongoose";
 //   return cached.conn;
 // }
 
+mongoose.set("strictQuery", true);
+
 type MongooseCache = {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
