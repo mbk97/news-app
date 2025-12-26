@@ -145,9 +145,43 @@ const getAllHeadlineNews = async (req: Request, res: Response) => {
   }
 };
 
+// const getAllPublishedNews = async (req: Request, res: Response) => {
+//   try {
+//     const { page = 1, limit = 10, category } = req.query;
+
+//     const { total, publishedNews } = await getAllPublishedNewsService({
+//       page,
+//       limit,
+//       category,
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Successful",
+//       currentPage: Number(page),
+//       totalPages: Math.ceil(total / Number(limit)),
+//       totalItems: total,
+//       data: publishedNews,
+//     });
+//   } catch (error) {
+//     const { message, statusCode, success } = customErrorHandler(error);
+//     res.status(statusCode).json({
+//       success: success,
+//       message,
+//     });
+//   }
+// };
 const getAllPublishedNews = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10, category } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const category = req.query.category as string | undefined;
+
+    // 🚀 Cache for 60–120 seconds at the edge
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=120, stale-while-revalidate=60"
+    );
 
     const { total, publishedNews } = await getAllPublishedNewsService({
       page,
@@ -155,18 +189,19 @@ const getAllPublishedNews = async (req: Request, res: Response) => {
       category,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Successful",
-      currentPage: Number(page),
-      totalPages: Math.ceil(total / Number(limit)),
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
       totalItems: total,
       data: publishedNews,
     });
   } catch (error) {
-    const { message, statusCode, success } = customErrorHandler(error);
-    res.status(statusCode).json({
-      success: success,
+    const { message, statusCode } = customErrorHandler(error);
+
+    return res.status(statusCode || 500).json({
+      success: false,
       message,
     });
   }
