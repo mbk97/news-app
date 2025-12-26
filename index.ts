@@ -97,11 +97,11 @@ connectDB().catch((err) => {
 });
 
 // ===== ONLY listen locally =====
-if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
-    console.log(`✅ Local server running on port ${PORT}`);
-  });
-}
+// if (process.env.NODE_ENV !== "production") {
+app.listen(PORT, () => {
+  console.log(`✅ Local server running on port ${PORT}`);
+});
+// }
 
 // ===== Export for Vercel =====
 export default app;
