@@ -86,11 +86,11 @@ app.use(errorHandler_1.errorHandler);
     console.error("❌ DB connection failed", err);
 });
 // ===== ONLY listen locally =====
-if (process.env.NODE_ENV !== "production") {
-    app.listen(PORT, () => {
-        console.log(`✅ Local server running on port ${PORT}`);
-    });
-}
+// if (process.env.NODE_ENV !== "production") {
+app.listen(PORT, () => {
+    console.log(`✅ Local server running on port ${PORT}`);
+});
+// }
 // ===== Export for Vercel =====
 exports.default = app;
 //# sourceMappingURL=index.js.map
