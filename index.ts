@@ -72,6 +72,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "http://localhost:3000",
       "https://www.naijadaily.ng",
       "https://naijadaily.vercel.app",
       "https://news-admin-app-fe.vercel.app",
