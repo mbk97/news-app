@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "npx tsc --version && npx tsc --showConfig | grep moduleResolution && tsc --noEmit",
     "start": "ts-node index.ts",
     "dev": "nodemon index.ts",
     "lint": "eslint . --ext .ts",
