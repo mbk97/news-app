@@ -14,7 +14,6 @@ const registerUserValidatorMiddleware = (req, res, next) => {
       message: validationError,
     });
   }
-
   next();
 };
 

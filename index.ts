@@ -77,6 +77,7 @@ app.use(
       "https://naijadaily.vercel.app",
       "https://news-admin-app-fe.vercel.app",
       "https://news-admin-app-938zf28pk-mbk97s-projects.vercel.app",
+      "https://news-admin-app-fe-7vvg.onrender.com/",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
