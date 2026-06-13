@@ -66,6 +66,8 @@ connectDB().catch((err) => {
   console.error("❌ DB connection failed", err);
 });
 
+console.log("🚀 CORS DEBUG VERSION 2");
+
 // ===== Listen =====
 app.listen(PORT, () => {
   console.log(`✅ Local server running on port ${PORT}`);
