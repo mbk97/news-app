@@ -17,33 +17,18 @@ const PORT = process.env.PORT || 5000;
 app.options("*", cors());
 
 // ===== 2. Global CORS Configuration =====
-// app.use(
-//   cors({
-//     origin: [
-//       "http://localhost:5173",
-//       "http://localhost:3000",
-//       "https://www.naijadaily.ng",
-//       "https://news-admin-app-fe-7vvg.onrender.com",
-//       "https://naijadaily.vercel.app",
-//       "https://news-admin-app-fe.vercel.app",
-//       "https://news-admin-app-938zf28pk-mbk97s-projects.vercel.app",
-//     ],
-//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-//     credentials: true,
-//   })
-// );
-
 app.use(
   cors({
-    origin: true,
-    credentials: true,
-  })
-);
-
-app.options(
-  "*",
-  cors({
-    origin: true,
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://www.naijadaily.ng",
+      "https://news-admin-app-fe-7vvg.onrender.com",
+      "https://naijadaily.vercel.app",
+      "https://news-admin-app-fe.vercel.app",
+      "https://news-admin-app-938zf28pk-mbk97s-projects.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   })
 );
@@ -65,8 +50,6 @@ app.use(errorHandler);
 connectDB().catch((err) => {
   console.error("❌ DB connection failed", err);
 });
-
-console.log("🚀 CORS DEBUG VERSION 2");
 
 // ===== Listen =====
 app.listen(PORT, () => {
