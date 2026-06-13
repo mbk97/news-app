@@ -1,1 +1,0 @@
-{"version":3,"file":"news.js","sourceRoot":"","sources":["../../validator/news.ts"],"names":[],"mappings":";;;AAAA,sCAAqC;AACrC,yCAAkD;AAE3C,MAAM,mBAAmB,GAAG,CAAC,IAAI,EAAE,EAAE;IAC1C,MAAM,KAAK,GAAG,IAAA,iBAAQ,EAAC,uBAAgB,EAAE,IAAI,CAAC,CAAC;IAC/C,OAAO,KAAK,CAAC;AACf,CAAC,CAAC;AAHW,QAAA,mBAAmB,uBAG9B"}
